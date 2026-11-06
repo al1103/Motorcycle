@@ -76,7 +76,10 @@ let importedObjectUrls = [];
 let viewGenerationTimer;
 let viewGenerationId = 0;
 const generatedBikeViews = new Map();
+const aiBikeViews = new Map();
 let activeImageView = 'front-left';
+let aiGenerating = false;
+let puterLoaderPromise;
 const imageViewAngles = {
   'front-left': { label: 'Trước ¾', azimuth: 1.0, polar: 1.18 },
   left: { label: 'Trái', azimuth: .05, polar: 1.38 },
@@ -246,11 +249,12 @@ function updateUI() {
   $('#bike-facts').innerHTML = Object.entries(record?.specifications || {}).map(([key, value]) => `<div class="bike-fact"><span>${key.replace(/([A-Z])/g, ' $1').replace(/^./, (letter) => letter.toUpperCase())}</span><strong>${value}</strong></div>`).join('');
   $('#generated-image-card').hidden = true;
   $('#options-heading').textContent = 'Thông tin xe';
-  const cachedViews = generatedBikeViews.get(state.bike);
-  if (cachedViews?.[activeImageView]) displayBikeView(activeImageView);
   $('#model-source-label').hidden = photoMode;
   $('#model-source-label').textContent = record?.asset ? `Ảnh render từ model tổng quát · ${record.asset.license}` : record?.source ? 'Ảnh render minh họa · không phải ảnh OEM' : 'Ảnh minh họa · thông số xe chưa được xác minh';
   $('#generated-view-label').textContent = record?.asset ? `RENDER TỪ MODEL TỔNG QUÁT · ${record.asset.license}` : record?.source ? 'ẢNH RENDER MINH HỌA · KHÔNG PHẢI ẢNH OEM' : 'ẢNH MINH HỌA · DỮ LIỆU ĐANG CẬP NHẬT';
+  const aiImage = aiBikeViews.get(state.bike)?.[activeImageView];
+  $('#ai-view-status').textContent = aiImage ? `Đang xem ảnh AI · góc ${imageViewAngles[activeImageView].label}` : 'Ảnh AI chỉ tạo khi bạn bấm nút · phí/credit tùy tài khoản Puter và model';
+  if (generatedBikeViews.get(state.bike)?.[activeImageView] || aiImage) displayBikeView(activeImageView);
   $('#undo-button').disabled = history.length === 0;
   $('#redo-button').disabled = future.length === 0;
 }
@@ -320,11 +324,64 @@ function displayBikeView(viewKey) {
   activeImageView = viewKey;
   $('#image-view-caption').textContent = `${imageViewAngles[viewKey].label.toUpperCase()} · ẢNH RENDER`;
   document.querySelectorAll('[data-view]').forEach((button) => button.classList.toggle('selected', button.dataset.view === viewKey));
+  const aiImage = aiBikeViews.get(state.bike)?.[viewKey];
   const views = generatedBikeViews.get(state.bike);
-  if (!views?.[viewKey]) return;
-  $('#bike-view-image').src = views[viewKey];
+  const imageSrc = aiImage || views?.[viewKey];
+  if (!imageSrc) return;
+  $('#bike-view-image').src = imageSrc;
   $('#bike-view-image').alt = `${bikes[state.bike].name} — ${imageViewAngles[viewKey].label} image render`;
+  $('#generated-view-label').textContent = aiImage ? 'ẢNH CONCEPT TẠO BẰNG AI · KHÔNG PHẢI ẢNH OEM' : catalog.motorcycles.find((record) => record.id === state.bike)?.asset ? `RENDER TỪ MODEL TỔNG QUÁT · ${catalog.motorcycles.find((record) => record.id === state.bike).asset.license}` : 'ẢNH RENDER MINH HỌA · KHÔNG PHẢI ẢNH OEM';
+  $('#ai-view-status').textContent = aiImage ? `Đang xem ảnh AI · góc ${imageViewAngles[viewKey].label}` : 'Ảnh AI chỉ tạo khi bạn bấm nút · phí/credit tùy tài khoản Puter và model';
   $('#bike-view-image').hidden = false;
+}
+
+function loadPuter() {
+  if (window.puter?.ai?.txt2img) return Promise.resolve(window.puter);
+  if (puterLoaderPromise) return puterLoaderPromise;
+  puterLoaderPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://js.puter.com/v2/';
+    script.async = true;
+    script.onload = () => window.puter?.ai?.txt2img ? resolve(window.puter) : reject(new Error('Puter image API was not available'));
+    script.onerror = () => reject(new Error('Could not load the Puter image service'));
+    document.head.appendChild(script);
+  }).catch((error) => { puterLoaderPromise = null; throw error; });
+  return puterLoaderPromise;
+}
+async function generateAiAngle() {
+  if (aiGenerating) return;
+  const record = catalog.motorcycles.find((item) => item.id === state.bike);
+  const bikeId = state.bike;
+  const viewKey = activeImageView;
+  const angle = imageViewAngles[viewKey];
+  const bikeName = bikes[state.bike].name;
+  const reference = generatedBikeViews.get(bikeId)?.[viewKey];
+  const prompt = `Create one premium motorcycle studio concept image showing a ${angle.label} view. Use the supplied reference image to keep the same general motorcycle silhouette and color; change the camera to the requested angle. Subject concept: ${bikeName}, category ${record?.category || 'motorcycle'}. Dark charcoal seamless studio background, softbox lighting, realistic materials, full vehicle centered and fully visible, no text, no watermark. It is a concept illustration, not an exact OEM photograph or a claim of manufacturer accuracy.`;
+  if (!window.confirm('Tạo một ảnh AI cho góc đang chọn? Mỗi lần tạo ảnh có thể dùng credit hoặc phát sinh phí tùy model và tài khoản Puter. Prompt và ảnh xem trước sẽ được gửi đến Puter. Tiếp tục?')) return;
+  aiGenerating = true;
+  const button = $('#ai-generate-view');
+  button.disabled = true;
+  $('#ai-view-status').textContent = `Đang tạo ảnh AI · ${angle.label}…`;
+  try {
+    const puter = await loadPuter();
+    const options = { width: 1024, height: 768 };
+    if (reference) options.input_image = reference;
+    const image = await puter.ai.txt2img({ prompt, ...options });
+    if (!(image instanceof HTMLImageElement) || !image.src) throw new Error('The image service returned no image');
+    await new Promise((resolve, reject) => { if (image.complete) image.naturalWidth ? resolve() : reject(new Error('Could not load the generated image')); else { image.onload = resolve; image.onerror = () => reject(new Error('Could not load the generated image')); } });
+    let views = aiBikeViews.get(bikeId);
+    if (!views) { views = {}; aiBikeViews.set(bikeId, views); }
+    views[viewKey] = image.src;
+    if (state.bike === bikeId && activeImageView === viewKey) displayBikeView(viewKey);
+    showToast('Ảnh concept AI đã tạo xong');
+  } catch (error) {
+    console.error('AI image generation failed:', error);
+    if (state.bike === bikeId && activeImageView === viewKey) $('#ai-view-status').textContent = 'Không tạo được ảnh AI. Ảnh render xem trước vẫn được giữ.';
+    showToast(error.message || 'Dịch vụ tạo ảnh AI không khả dụng');
+  } finally {
+    aiGenerating = false;
+    button.disabled = false;
+  }
 }
 
 function renderCategoryOptions() {
@@ -460,6 +517,7 @@ $('#category-list').addEventListener('click', (event) => {
 $('#bike-select').addEventListener('change', (event) => selectBike(event.target.value));
 $('#change-bike').addEventListener('click', () => { const record = catalog.motorcycles.find((bike) => bike.id === state.bike); const source = record.source?.url || record.asset?.source; if (source) window.open(source, '_blank', 'noopener'); else showToast('Nguồn dữ liệu cho mẫu xe này đang được cập nhật'); });
 $('#filter-button').addEventListener('click', () => showToast('Mẫu hiển thị chưa có thông tin fitment phụ tùng đã xác minh'));
+$('#ai-generate-view').addEventListener('click', generateAiAngle);
 $('#studio-select').addEventListener('click', () => { const bright = scene.background.getHexString() === '1c1d20'; scene.background.set(bright ? '#13171d' : '#1c1d20'); floor.material.color.set(bright ? '#1d2228' : '#222326'); generatedBikeViews.delete(state.bike); scheduleGeneratedViews(); });
 $('#shadow-toggle').addEventListener('click', () => { renderer.shadowMap.enabled = !renderer.shadowMap.enabled; generatedBikeViews.delete(state.bike); scheduleGeneratedViews(); });
 $('#fullscreen-toggle').addEventListener('click', () => { if (!document.fullscreenElement) stage.requestFullscreen?.(); else document.exitFullscreen?.(); });

@@ -1,10 +1,10 @@
 # Motoform Motorcycle Studio
 
-A responsive motorcycle catalog and image-view studio. The viewer presents five saved camera-angle images instead of a live 3D viewport. It renders those still images locally from the selected Three.js scene; angle buttons switch between the front three-quarter, left, rear, right and top views. No images are sent to a generation API. These are 3D renders, not AI-generated photographs or OEM product photos.
+A responsive motorcycle catalog and image-view studio. The viewer presents five still-image camera views instead of a live 3D viewport. It can also generate an AI concept image for the currently selected angle. AI output is explicitly labeled as illustrative—not OEM-accurate.
 
 ## Motorcycle list and view status
 
-The selector/catalog list is driven by `data/catalog.json`. It currently has eight selectable records. The Yamaha MT-15 has manufacturer-sourced specifications; one generic dirt-bike scene uses the included CC0 model. Other catalog entries are explicitly marked as pending verified specs and OEM imagery. Until exact-model assets are sourced, their images are generated from illustrative geometry and labeled accordingly; they must not be represented as accurate OEM views.
+The selector/catalog list is driven by `data/catalog.json`. It currently has eight selectable records. The Yamaha MT-15 has manufacturer-sourced specifications; one generic dirt-bike scene uses the included CC0 model. Other catalog entries are explicitly marked as pending verified specs and OEM imagery. Until exact-model assets are sourced, their fallback images are rendered from illustrative geometry and labeled accordingly; they must not be represented as accurate OEM views. Users can request an AI concept image for one angle at a time.
 
 ## Accessory ideas
 
@@ -31,4 +31,8 @@ No package install or build step is required. Serve the repository root over HTT
 python3 -m http.server 4173
 ```
 
-Open <http://localhost:4173>. Three.js and its KTX2 decoder are loaded from jsDelivr. The saved image-angle files are generated in-browser from the rendered canvas and retained in memory for the current session.
+Open <http://localhost:4173>. Three.js and its KTX2 decoder are loaded from jsDelivr. Fallback angle renders and AI concepts are retained in browser memory for the current session.
+
+## AI concept images
+
+Choose a camera angle and click **Tạo ảnh AI góc này**. The app asks for confirmation before each image, lazily loads [Puter.js](https://js.puter.com/v2/) and calls its documented browser `puter.ai.txt2img` API with the selected fallback render as a reference image. Puter returns an `HTMLImageElement`; the selected still is replaced by the resulting concept if successful. The user can generate the other angles individually. Prompt and reference image are sent to Puter. Usage may consume credits or incur account/model-dependent costs; the app does not set a developer API key or make automatic generation requests. AI results are memory-only and marked as concepts, not accurate OEM vehicle images. See the [Puter image generation documentation](https://docs.puter.com/AI/txt2img/) for current models and terms.
