@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d0e10" />
+    <meta name="description" content="Build your next ride in Motoform's interactive motorcycle studio." />
+    <title>Motoform — Motorcycle Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="importmap">
+      {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}
+    </script>
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#studio" aria-label="Motoform home"><span class="brand-mark">M</span><span>MOTOFORM<span class="brand-dot">.</span></span></a>
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="#catalog">Catalog</a><a class="active" href="#studio">Studio</a><a href="#parts">Parts</a>
+        </nav>
+        <div class="top-actions"><button class="garage-link" id="garage-open"><span class="garage-icon">▱</span> My garage <span class="garage-count" id="garage-count">0</span></button><button class="avatar" aria-label="User profile">Z</button></div>
+      </header>
+
+      <main id="studio" class="studio-layout">
+        <aside class="left-panel panel">
+          <div class="panel-heading"><div><p class="eyebrow">BUILD YOUR RIDE</p><h1>Studio</h1></div><button class="icon-button mobile-close" aria-label="Close customizer">×</button></div>
+          <div class="bike-select-wrap" id="catalog"><label for="bike-select">YOUR MOTORCYCLE</label><div class="select-shell"><span class="bike-mini">◈</span><select id="bike-select"><option value="mt15">Yamaha MT-15 2024</option><option value="cbr150">Honda CBR150R 2024</option><option value="ninja400">Kawasaki Ninja 400 2024</option></select><span class="select-chevron">⌄</span></div><div class="bike-subtitle"><span class="status-dot"></span><span id="bike-subtitle">2024 · Standard · 155 cc</span><button class="text-link" id="change-bike">Change</button></div></div>
+          <div class="section-label"><span>COMPONENTS</span><span class="count-label">06</span></div>
+          <div class="category-list" id="category-list" role="tablist" aria-label="Customization categories">
+            <button class="category active" data-category="paint" role="tab" aria-selected="true"><span class="category-icon paint-icon">◉</span><span>Paint & finish</span><span class="category-chevron">›</span></button>
+            <button class="category" data-category="wheels" role="tab" aria-selected="false"><span class="category-icon">◎</span><span>Wheels & tires</span><span class="category-chevron">›</span></button>
+            <button class="category" data-category="exhaust" role="tab" aria-selected="false"><span class="category-icon">≋</span><span>Exhaust system</span><span class="category-chevron">›</span></button>
+            <button class="category" data-category="suspension" role="tab" aria-selected="false"><span class="category-icon">↕</span><span>Suspension</span><span class="category-chevron">›</span></button>
+            <button class="category" data-category="brakes" role="tab" aria-selected="false"><span class="category-icon">◉</span><span>Brakes</span><span class="category-chevron">›</span></button>
+            <button class="category" data-category="accessories" role="tab" aria-selected="false"><span class="category-icon">⌁</span><span>Accessories</span><span class="category-chevron">›</span></button>
+          </div>
+          <div class="custom-options" id="custom-options"></div>
+          <div class="compat-note"><span class="shield">✓</span><span><strong>3D preview support</strong><small>Physical fitment not verified</small></span><span class="info-mark">i</span></div>
+        </aside>
+
+        <section class="viewer-column" aria-label="3D motorcycle viewer">
+          <div class="viewer-toolbar"><div class="view-title"><span class="live-indicator"></span><span>LIVE PREVIEW</span><span class="view-divider">/</span><span id="viewer-bike-name">MT-15</span></div><div class="toolbar-actions"><button class="tool-button" id="photo-mode" title="View uploaded turntable photos">↻ <span class="tool-label">360 Photos</span></button><button class="tool-button" id="model-upload" title="Load an existing GLB or GLTF model">⬆ <span class="tool-label">Import 3D</span></button><button class="tool-button" id="studio-select" aria-label="Change environment" title="Studio environment"><span>☼</span><span class="tool-label">Studio</span><span class="tiny-chevron">⌄</span></button><button class="tool-button" id="shadow-toggle" aria-label="Toggle floor shadows" title="Toggle floor shadows"><span>◒</span></button><button class="tool-button" id="fullscreen-toggle" aria-label="Enter fullscreen" title="Fullscreen">⛶</button></div><input id="photo-input" type="file" accept="image/*" multiple hidden /><input id="model-input" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" hidden /></div>
+          <div class="viewer-stage" id="viewer-stage"><canvas id="bike-canvas" aria-label="Interactive 3D motorcycle preview"></canvas><img id="turntable-image" alt="360 degree motorcycle photo sequence" hidden /><div class="photo-empty" id="photo-empty" hidden><span class="photo-empty-icon">↻</span><strong>Add turntable photos</strong><small>Choose 12–72 photos around the bike, captured at the same height. Name them in rotation order.</small><button id="photo-empty-upload">Select photos</button><button class="photo-info-link" id="photo-model-info">How do I make this a 3D model?</button></div><div class="load-state" id="load-state"><span class="loader"></span><span>Building your bike...</span></div>
+            <div class="stage-caption"><div class="model-tag"><span class="tag-brand">Y</span><span><strong id="stage-model">Yamaha MT-15</strong><small>NAKED · 2024</small></span></div><div class="rotation-tag"><span>⟳</span> DRAG TO ROTATE</div></div>
+            <div class="camera-controls" id="camera-controls"><button data-view="front" aria-label="Front view" title="Front view">F</button><button data-view="side" class="selected" aria-label="Side view" title="Side view">S</button><button data-view="rear" aria-label="Rear view" title="Rear view">R</button><span></span><button id="zoom-out" aria-label="Zoom out">−</button><button id="zoom-in" aria-label="Zoom in">+</button></div>
+            <div class="photo-controls" id="photo-controls" hidden><button id="photo-prev" aria-label="Previous photo">‹</button><span id="photo-index">0 / 0</span><button id="photo-next" aria-label="Next photo">›</button><button id="photo-select">Change photos</button><span class="photo-hint">Drag left/right to rotate</span></div>
+            <div class="model-source-label" id="model-source-label" hidden>Imported 3D model · orbit to inspect</div>
+            <button class="auto-rotate" id="rotate-toggle"><span class="rotate-icon">⟳</span> Auto rotate <span class="toggle"><i></i></span></button>
+            <div class="view-notice" id="view-notice" role="status"></div>
+          </div>
+          <div class="viewer-footer"><div class="viewer-hint"><span class="mouse-hint">⌖</span> Drag to rotate <span class="hint-separator">·</span> Scroll to zoom</div><div class="footer-tools"><button id="undo-button" class="history-button" title="Undo" aria-label="Undo">↶</button><button id="redo-button" class="history-button" title="Redo" aria-label="Redo">↷</button><button class="reset-camera" id="reset-camera">Reset camera <span>↺</span></button></div></div>
+          <div class="build-strip"><div class="build-strip-title"><span>YOUR BUILD</span><span class="build-items" id="build-items">1 item installed</span></div><div class="build-summary" id="build-summary"></div><div class="build-total"><span>BUILD TOTAL</span><strong id="build-total">$0</strong><button class="save-button" id="save-build"><span>＋</span> Save build</button></div></div>
+        </section>
+
+        <aside class="right-panel panel" id="parts">
+          <div class="parts-head"><div><p class="eyebrow">DEMO OPTIONS FOR THIS BIKE</p><h2 id="options-heading">Paint & finish</h2></div><button class="icon-button" id="filter-button" aria-label="Filter parts">☷</button></div>
+          <div class="fitment-banner"><span class="fitment-check">✓</span><span><strong>Direct fit</strong><small>Verified for Yamaha MT-15 2024</small></span><button aria-label="Fitment information" title="Fitment verified for this demo model">i</button></div>
+          <div class="parts-search"><span>⌕</span><input id="parts-search" type="search" placeholder="Search parts..." aria-label="Search parts" /><kbd>⌘ K</kbd></div>
+          <div class="parts-meta"><span id="parts-count">04 OPTIONS</span><button id="sort-button">Featured <span>⌄</span></button></div>
+          <div class="product-list" id="product-list"></div>
+          <div class="delivery-card"><span class="delivery-icon">↗</span><span><strong>Preview parts, not a marketplace.</strong><small>Verify physical fitment with the manufacturer.</small></span></div>
+        </aside>
+      </main>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div><dialog class="model-info-dialog" id="model-info-dialog"><div class="dialog-head"><div><p class="eyebrow">3D MODEL GENERATION</p><h2>From photos to a real mesh</h2></div><button class="icon-button" id="model-info-close" aria-label="Close">×</button></div><p>360° photos create a viewable image spin, not 3D geometry. To create a realistic GLB/GLTF mesh, process the photos with a photogrammetry or image-to-3D service, then import that model here.</p><ol><li>Capture 24–72 overlapping photos all around the motorcycle.</li><li>Keep distance, lighting and camera height consistent.</li><li>Generate and export a <code>.glb</code> or <code>.gltf</code> model.</li><li>Use <strong>Import 3D</strong> to inspect the actual mesh in the viewer.</li></ol><p class="model-info-note">This demo does not send your photos to an AI service or claim to generate a 3D model locally.</p><button class="dialog-action" id="model-info-import">Import a generated model <span>↑</span></button></dialog>
+      <dialog class="garage-dialog" id="garage-dialog"><div class="dialog-head"><div><p class="eyebrow">YOUR BUILDS</p><h2>My garage</h2></div><button class="icon-button" id="garage-close" aria-label="Close garage">×</button></div><div id="garage-builds" class="garage-builds"></div><button class="dialog-action" id="new-build">Start a new build <span>＋</span></button></dialog>
+    </div>
+  </body>
+</html>
