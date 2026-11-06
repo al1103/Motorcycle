@@ -1,6 +1,5 @@
 {
   "updatedAt": "2026-11-06",
-  "currency": "IDR",
   "motorcycles": [
     {
       "id": "mt15",
@@ -9,8 +8,6 @@
       "year": 2026,
       "variant": "Standard",
       "category": "Naked",
-      "price": 41215000,
-      "priceLabel": "Recommended Jakarta OTR price",
       "specifications": {
         "displacement": "155.09 cc",
         "power": "14.2 kW at 10,000 rpm",
@@ -29,7 +26,6 @@
         "kind": "Manufacturer product page",
         "accessedAt": "2026-11-06"
       },
-      "modelStatus": "No licensed MT-15 3D asset in this catalog; current configurator geometry is an illustrative preview.",
       "displayName": "Yamaha MT-15",
       "short": "MT-15",
       "tag": "NAKED",
@@ -37,39 +33,39 @@
       "mark": "Y",
       "accent": "#d7482e",
       "style": "naked",
-      "selectorLabel": "Yamaha MT-15 · 2026 spec"
-    },
-    {
-      "id": "dirt250",
-      "manufacturer": "Generic / unbranded",
-      "model": "Dirt Bike 250cc (asset description)",
-      "year": null,
-      "variant": "Generic motocross model",
-      "category": "Dirt Bike",
-      "price": null,
-      "specifications": {
-        "engineClass": "Generic 250 cc motocross bike (asset description, not verified manufacturer data)",
-        "dimensions": "0.85 × 1.24 × 2.16 m (asset nominal size)",
-        "triangleCount": "42,940 (LOD0)",
-        "movingParts": "Fork, front wheel, rear wheel"
-      },
-      "asset": {
-        "file": "assets/models/tevy-dirt-bike.glb",
-        "creator": "tevy",
-        "license": "CC0 1.0",
-        "source": "https://tevy.dev/models/dirt-bike",
-        "version": "v1 / LOD0",
-        "sourceImage": "assets/images/tevy-dirt-bike-render.png"
-      },
-      "modelStatus": "Real GLB mesh; generic asset, not a specific road-legal manufacturer/model.",
-      "displayName": "Generic Dirt Bike 250cc",
-      "short": "DIRT BIKE",
-      "tag": "DIRT · CC0 MODEL",
-      "cc": "Generic 250cc",
-      "mark": "3D",
-      "accent": "#6552c8",
-      "style": "asset",
-      "selectorLabel": "Generic Dirt Bike · CC0 3D model"
+      "selectorLabel": "Yamaha MT-15 · 2026 spec",
+      "recommendations": [
+        {
+          "name": "Bảo vệ xe",
+          "items": [
+            "Gù chống đổ",
+            "Ốp két nước",
+            "Tank pad"
+          ],
+          "why": "Ý tưởng bảo vệ cho xe đi phố. Kiểm tra điểm bắt và khoảng hở theo đúng đời xe."
+        },
+        {
+          "name": "Tư thế lái",
+          "items": [
+            "Bao tay",
+            "Gương chiếu hậu",
+            "Yên xe"
+          ],
+          "why": "Có thể cân nhắc theo nhu cầu sử dụng; kiểm tra kích thước và quy định giao thông."
+        },
+        {
+          "name": "Ngoại hình",
+          "items": [
+            "Tem decal",
+            "Kính chắn gió",
+            "Đuôi biển số"
+          ],
+          "why": "Thay đổi phong cách; không đại diện cho món đồ tương thích đã xác minh."
+        }
+      ],
+      "recommendationNote": "Gợi ý theo phong cách xe, không phải xác nhận fitment.",
+      "generatedImageStatus": "Chưa có ảnh AI được tạo. Tạo ảnh bằng nút AI sau khi đăng nhập Puter."
     }
-  ]
+  ],
+  "assetPolicy": "Không hiển thị xe, model hoặc ảnh demo."
 }

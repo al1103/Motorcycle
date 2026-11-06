@@ -1,72 +1,47 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0d0e10" />
-    <meta name="description" content="Build your next ride in Motoform's interactive motorcycle studio." />
-    <title>Motoform — Motorcycle Studio</title>
+    <meta name="description" content="Motoform — tạo ảnh concept AI xe máy theo góc nhìn." />
+    <title>Motoform — AI Motorcycle Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
-    <script type="importmap">
-      {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}
-    </script>
     <script type="module" src="./app.js"></script>
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
         <a class="brand" href="#studio" aria-label="Motoform home"><span class="brand-mark">M</span><span>MOTOFORM<span class="brand-dot">.</span></span></a>
-        <nav class="main-nav" aria-label="Main navigation">
-          <a href="#catalog">Catalog</a><a class="active" href="#studio">Studio</a><a href="#parts">Parts</a>
-        </nav>
-        <div class="top-actions"><button class="garage-link" id="garage-open"><span class="garage-icon">▱</span> My garage <span class="garage-count" id="garage-count">0</span></button><button class="avatar" aria-label="User profile">Z</button></div>
+        <nav class="main-nav" aria-label="Điều hướng"><a class="active" href="#studio">AI Image Studio</a><a href="#catalog">Danh mục xe</a><a href="#ideas">Gợi ý độ xe</a></nav>
+        <div class="top-actions"><span class="data-status-pill">AI concept · không phải ảnh OEM</span></div>
       </header>
-
-      <main id="studio" class="studio-layout">
+      <main id="studio" class="studio-layout ai-studio-layout">
         <aside class="left-panel panel">
-          <div class="panel-heading"><div><p class="eyebrow">BUILD YOUR RIDE</p><h1>Studio</h1></div><button class="icon-button mobile-close" aria-label="Close customizer">×</button></div>
-          <div class="bike-select-wrap" id="catalog"><label for="bike-select">MOTORCYCLE CATALOG</label><div class="select-shell"><span class="bike-mini">◈</span><select id="bike-select"><option value="mt15">Yamaha MT-15 · 2026 spec</option><option value="dirt250">Generic Dirt Bike · CC0 3D model</option></select><span class="select-chevron">⌄</span></div><div class="bike-subtitle"><span class="status-dot"></span><span id="bike-subtitle">Official specs · Indonesia</span><button class="text-link" id="change-bike">Source</button></div></div>
-          <div class="section-label"><span>COMPONENTS</span><span class="count-label">06</span></div>
-          <div class="category-list" id="category-list" role="tablist" aria-label="Customization categories">
-            <button class="category active" data-category="paint" role="tab" aria-selected="true"><span class="category-icon paint-icon">◉</span><span>Paint & finish</span><span class="category-chevron">›</span></button>
-            <button class="category" data-category="wheels" role="tab" aria-selected="false"><span class="category-icon">◎</span><span>Wheels & tires</span><span class="category-chevron">›</span></button>
-            <button class="category" data-category="exhaust" role="tab" aria-selected="false"><span class="category-icon">≋</span><span>Exhaust system</span><span class="category-chevron">›</span></button>
-            <button class="category" data-category="suspension" role="tab" aria-selected="false"><span class="category-icon">↕</span><span>Suspension</span><span class="category-chevron">›</span></button>
-            <button class="category" data-category="brakes" role="tab" aria-selected="false"><span class="category-icon">◉</span><span>Brakes</span><span class="category-chevron">›</span></button>
-            <button class="category" data-category="accessories" role="tab" aria-selected="false"><span class="category-icon">⌁</span><span>Accessories</span><span class="category-chevron">›</span></button>
-          </div>
-          <div class="custom-options" id="custom-options"></div>
-          <div class="compat-note"><span class="shield">✓</span><span><strong>3D preview support</strong><small>Physical fitment not verified</small></span><span class="info-mark">i</span></div>
+          <div class="panel-heading"><div><p class="eyebrow">MOTOFORM AI STUDIO</p><h1>Chọn xe</h1></div></div>
+          <div class="bike-select-wrap" id="catalog"><label for="bike-select">XE CÓ DỮ LIỆU NGUỒN</label><div class="select-shell"><span class="bike-mini">◈</span><select id="bike-select" aria-label="Chọn xe máy"></select><span class="select-chevron">⌄</span></div><div class="bike-subtitle"><span class="status-dot"></span><span id="bike-subtitle"></span><button class="text-link" id="change-bike">Nguồn</button></div><div class="catalog-bike-list" id="catalog-bike-list"></div></div>
+          <section class="ai-consent-card"><span>✦</span><strong>Ảnh AI theo yêu cầu</strong><p>Chỉ gửi prompt tới Puter sau khi bạn bấm tạo và xác nhận. Nếu chưa đăng nhập, Puter sẽ yêu cầu đăng nhập trước khi tạo ảnh. Có thể cần đăng nhập Puter; credit/chi phí tùy tài khoản và model.</p><a href="https://docs.puter.com/AI/txt2img/" target="_blank" rel="noreferrer">Điều khoản & model ↗</a></section>
         </aside>
 
-        <section class="viewer-column" aria-label="3D motorcycle viewer">
-          <div class="viewer-toolbar"><div class="view-title"><span class="live-indicator"></span><span>LIVE PREVIEW</span><span class="view-divider">/</span><span id="viewer-bike-name">MT-15</span></div><div class="toolbar-actions"><button class="tool-button" id="photo-mode" title="View uploaded turntable photos">↻ <span class="tool-label">360 Photos</span></button><button class="tool-button" id="model-upload" title="Load an existing GLB or GLTF model">⬆ <span class="tool-label">Import 3D</span></button><button class="tool-button" id="studio-select" aria-label="Change environment" title="Studio environment"><span>☼</span><span class="tool-label">Studio</span><span class="tiny-chevron">⌄</span></button><button class="tool-button" id="shadow-toggle" aria-label="Toggle floor shadows" title="Toggle floor shadows"><span>◒</span></button><button class="tool-button" id="fullscreen-toggle" aria-label="Enter fullscreen" title="Fullscreen">⛶</button></div><input id="photo-input" type="file" accept="image/*" multiple hidden /><input id="model-input" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" hidden /></div>
-          <div class="viewer-stage" id="viewer-stage"><canvas id="bike-canvas" aria-label="Interactive 3D motorcycle preview"></canvas><img id="turntable-image" alt="360 degree motorcycle photo sequence" hidden /><div class="photo-empty" id="photo-empty" hidden><span class="photo-empty-icon">↻</span><strong>Add turntable photos</strong><small>Choose 12–72 photos around the bike, captured at the same height. Name them in rotation order.</small><button id="photo-empty-upload">Select photos</button><button class="photo-info-link" id="photo-model-info">How do I make this a 3D model?</button></div><div class="load-state" id="load-state"><span class="loader"></span><span>Building your bike...</span></div>
-            <div class="stage-caption"><div class="model-tag"><span class="tag-brand">Y</span><span><strong id="stage-model">Yamaha MT-15</strong><small>NAKED · 2026</small></span></div><div class="rotation-tag"><span>⟳</span> DRAG TO ROTATE</div></div>
-            <div class="camera-controls" id="camera-controls"><button data-view="front" aria-label="Front view" title="Front view">F</button><button data-view="side" class="selected" aria-label="Side view" title="Side view">S</button><button data-view="rear" aria-label="Rear view" title="Rear view">R</button><span></span><button id="zoom-out" aria-label="Zoom out">−</button><button id="zoom-in" aria-label="Zoom in">+</button></div>
-            <div class="photo-controls" id="photo-controls" hidden><button id="photo-prev" aria-label="Previous photo">‹</button><span id="photo-index">0 / 0</span><button id="photo-next" aria-label="Next photo">›</button><button id="photo-select">Change photos</button><span class="photo-hint">Drag left/right to rotate</span></div>
-            <div class="model-source-label" id="model-source-label" hidden>Imported 3D model · orbit to inspect</div>
-            <button class="auto-rotate" id="rotate-toggle"><span class="rotate-icon">⟳</span> Auto rotate <span class="toggle"><i></i></span></button>
-            <div class="view-notice" id="view-notice" role="status"></div>
-          </div>
-          <div class="viewer-footer"><div class="viewer-hint"><span class="mouse-hint">⌖</span> Drag to rotate <span class="hint-separator">·</span> Scroll to zoom</div><div class="footer-tools"><button id="undo-button" class="history-button" title="Undo" aria-label="Undo">↶</button><button id="redo-button" class="history-button" title="Redo" aria-label="Redo">↷</button><button class="reset-camera" id="reset-camera">Reset camera <span>↺</span></button></div></div>
-          <div class="build-strip"><div class="build-strip-title"><span>YOUR BUILD</span><span class="build-items" id="build-items">1 item installed</span></div><div class="build-summary" id="build-summary"></div><div class="build-total"><span id="build-total-label">BIKE PRICE · IDR</span><strong id="build-total">Not priced</strong><button class="save-button" id="save-build"><span>＋</span> Save build</button></div></div>
+        <section class="viewer-column image-studio" aria-label="Ảnh concept AI xe máy">
+          <div class="viewer-toolbar"><div class="view-title"><span class="live-indicator"></span><span>AI CONCEPT VIEWS</span><span class="view-divider">/</span><span id="viewer-bike-name"></span></div><div class="toolbar-actions"><button class="tool-button" id="fullscreen-toggle" aria-label="Toàn màn hình" title="Toàn màn hình">⛶</button></div></div>
+          <div class="viewer-stage image-mode ai-image-stage" id="viewer-stage"><img id="bike-view-image" class="bike-view-image" alt="Ảnh concept AI xe máy" hidden /><div class="image-empty" id="image-empty"><span class="empty-spark">✦</span><strong id="empty-title">Chưa có ảnh AI</strong><p id="empty-copy">Chọn góc nhìn rồi tạo ảnh concept AI. Ảnh được lưu trong bộ nhớ phiên hiện tại.</p><button class="save-button" id="empty-generate">✦ Tạo ảnh AI góc này</button></div><div class="ai-image-loading" id="ai-image-loading" hidden><span class="loader"></span><strong>Đang tạo ảnh AI…</strong><small>Nếu được yêu cầu, hãy đăng nhập Puter trong cửa sổ mở ra.</small></div><div class="stage-caption"><div class="model-tag"><span class="tag-brand">Y</span><span><strong id="stage-model"></strong><small id="stage-meta"></small></span></div><div class="rotation-tag" id="ai-view-status">CONCEPT AI · KHÔNG PHẢI ẢNH OEM</div></div><div class="generated-view-label" id="generated-view-label">ẢNH AI CHƯA ĐƯỢC TẠO</div><div class="camera-controls image-view-controls" id="camera-controls"><button data-view="front-left" class="selected">Trước ¾</button><button data-view="left">Trái</button><button data-view="rear">Sau</button><button data-view="right">Phải</button><button data-view="top">Trên</button></div></div>
+          <div class="viewer-footer"><div class="viewer-hint">Chọn một góc để tạo/đổi ảnh AI. Không tạo ảnh tự động.</div><div class="footer-tools"><button class="tool-button" id="generate-view">✦ Tạo ảnh AI góc này</button><a class="reset-camera" id="download-view" hidden download="motoform-ai-concept.png">Tải ảnh ↓</a></div></div>
+          <div class="build-strip"><div class="build-strip-title"><span>XE ĐANG CHỌN</span><span class="build-items" id="view-count">0 / 5 ảnh AI</span></div><div class="build-summary"><div class="build-item"><span class="build-item-icon">✦</span><span><strong id="selected-angle-name">Trước ¾</strong><small>Ảnh concept — không xác nhận fitment</small></span></div></div><div class="build-actions"><button class="save-button" id="save-view">Lưu ảnh vào thiết bị</button></div></div>
         </section>
 
-        <aside class="right-panel panel" id="parts">
-          <div class="parts-head"><div><p class="eyebrow" id="data-eyebrow">SOURCE: YAMAHA MOTOR INDONESIA</p><h2 id="options-heading">Verified specifications</h2></div><button class="icon-button" id="filter-button" aria-label="Data source notes">i</button></div>
-          <section class="bike-facts" id="bike-facts" aria-label="Motorcycle data"></section>
-          <div class="fitment-banner"><span class="fitment-check">i</span><span><strong id="data-status-title">Manufacturer data</strong><small id="data-status-note">Source and pricing region shown</small></span><a id="data-source-link" target="_blank" rel="noreferrer">Source ↗</a></div>
-          <div class="generated-image-card" id="generated-image-card" hidden><div class="generated-image-head"><span>GENERATED 3D STUDIO RENDER</span><a href="./assets/images/tevy-dirt-bike-render.png" download>Download</a></div><img src="./assets/images/tevy-dirt-bike-render.png" alt="Studio render generated from the included generic CC0 dirt bike 3D mesh" /><small>Rendered from the 3D asset · generic model, not a product photograph.</small></div>
-          <div class="product-list sourced-parts-empty" id="product-list"><div class="empty-state"><span>⌁</span><strong>No sourced aftermarket listings yet</strong><small>Parts appear here only after model-year compatibility and vendor pricing are verified.</small></div></div>
-          <div class="delivery-card"><span class="delivery-icon">↗</span><span><strong>Visual controls are previews.</strong><small>They do not establish fitment or product price.</small></span></div>
+        <aside class="right-panel panel" id="ideas">
+          <div class="parts-head"><div><p class="eyebrow" id="data-eyebrow"></p><h2>Gợi ý độ xe</h2></div><a class="source-link" id="data-source-link" target="_blank" rel="noreferrer" hidden>Nguồn ↗</a></div>
+          <section class="bike-facts" id="bike-facts" aria-label="Thông số xe"></section>
+          <p class="fitment-warning">Gợi ý phong cách, không phải xác nhận phụ tùng tương thích. Kiểm tra đúng đời/phiên bản và hỏi thợ đủ chuyên môn.</p>
+          <div class="gear-list" id="gear-list"></div>
+          <div class="ai-limit-note"><strong>Không còn dữ liệu xe demo.</strong><span>Catalog chỉ hiển thị mẫu có nguồn xác thực. Thêm xe khi có nguồn thông số và ảnh tham chiếu hợp pháp.</span></div>
         </aside>
       </main>
-      <div class="toast" id="toast" role="status" aria-live="polite"></div><dialog class="model-info-dialog" id="model-info-dialog"><div class="dialog-head"><div><p class="eyebrow">3D MODEL GENERATION</p><h2>From photos to a real mesh</h2></div><button class="icon-button" id="model-info-close" aria-label="Close">×</button></div><p>360° photos create a viewable image spin, not 3D geometry. To create a realistic GLB/GLTF mesh, process the photos with a photogrammetry or image-to-3D service, then import that model here.</p><ol><li>Capture 24–72 overlapping photos all around the motorcycle.</li><li>Keep distance, lighting and camera height consistent.</li><li>Generate and export a <code>.glb</code> or <code>.gltf</code> model.</li><li>Use <strong>Import 3D</strong> to inspect the actual mesh in the viewer.</li></ol><p class="model-info-note">This demo does not send your photos to an AI service or claim to generate a 3D model locally.</p><button class="dialog-action" id="model-info-import">Import a generated model <span>↑</span></button></dialog>
-      <dialog class="garage-dialog" id="garage-dialog"><div class="dialog-head"><div><p class="eyebrow">YOUR BUILDS</p><h2>My garage</h2></div><button class="icon-button" id="garage-close" aria-label="Close garage">×</button></div><div id="garage-builds" class="garage-builds"></div><button class="dialog-action" id="new-build">Start a new build <span>＋</span></button></dialog>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </div>
   </body>
 </html>
