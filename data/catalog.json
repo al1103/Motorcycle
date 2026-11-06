@@ -1,0 +1,75 @@
+{
+  "updatedAt": "2026-11-06",
+  "currency": "IDR",
+  "motorcycles": [
+    {
+      "id": "mt15",
+      "manufacturer": "Yamaha",
+      "model": "MT-15",
+      "year": 2026,
+      "variant": "Standard",
+      "category": "Naked",
+      "price": 41215000,
+      "priceLabel": "Recommended Jakarta OTR price",
+      "specifications": {
+        "displacement": "155.09 cc",
+        "power": "14.2 kW at 10,000 rpm",
+        "torque": "14.7 Nm at 8,500 rpm",
+        "dimensions": "1,965 × 800 × 1,065 mm",
+        "wheelbase": "1,335 mm",
+        "seatHeight": "810 mm",
+        "wetWeight": "133 kg",
+        "fuelTank": "10.4 L",
+        "frontTire": "110/70-17",
+        "rearTire": "140/70-17"
+      },
+      "source": {
+        "name": "Yamaha Motor Indonesia",
+        "url": "https://www.yamaha-motor.co.id/product/mt15/",
+        "kind": "Manufacturer product page",
+        "accessedAt": "2026-11-06"
+      },
+      "modelStatus": "No licensed MT-15 3D asset in this catalog; current configurator geometry is an illustrative preview.",
+      "displayName": "Yamaha MT-15",
+      "short": "MT-15",
+      "tag": "NAKED",
+      "cc": "155.09 cc",
+      "mark": "Y",
+      "accent": "#d7482e",
+      "style": "naked",
+      "selectorLabel": "Yamaha MT-15 · 2026 spec"
+    },
+    {
+      "id": "dirt250",
+      "manufacturer": "Generic / unbranded",
+      "model": "Dirt Bike 250cc (asset description)",
+      "year": null,
+      "variant": "Generic motocross model",
+      "category": "Dirt Bike",
+      "price": null,
+      "specifications": {
+        "engineClass": "Generic 250 cc motocross bike (asset description, not verified manufacturer data)",
+        "dimensions": "0.85 × 1.24 × 2.16 m (asset nominal size)",
+        "triangleCount": "42,940 (LOD0)",
+        "movingParts": "Fork, front wheel, rear wheel"
+      },
+      "asset": {
+        "file": "assets/models/tevy-dirt-bike.glb",
+        "creator": "tevy",
+        "license": "CC0 1.0",
+        "source": "https://tevy.dev/models/dirt-bike",
+        "version": "v1 / LOD0",
+        "sourceImage": "assets/images/tevy-dirt-bike-render.png"
+      },
+      "modelStatus": "Real GLB mesh; generic asset, not a specific road-legal manufacturer/model.",
+      "displayName": "Generic Dirt Bike 250cc",
+      "short": "DIRT BIKE",
+      "tag": "DIRT · CC0 MODEL",
+      "cc": "Generic 250cc",
+      "mark": "3D",
+      "accent": "#6552c8",
+      "style": "asset",
+      "selectorLabel": "Generic Dirt Bike · CC0 3D model"
+    }
+  ]
+}

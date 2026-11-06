@@ -1,45 +1,48 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 const $ = (selector) => document.querySelector(selector);
 const canvas = $('#bike-canvas');
 const stage = $('#viewer-stage');
-const bikes = {
-  mt15: { name: 'Yamaha MT-15', short: 'MT-15', category: 'NAKED', cc: '155 cc', mark: 'Y', color: '#d6d7d8', accent: '#d7482e', style: 'naked' },
-  cbr150: { name: 'Honda CBR150R', short: 'CBR150R', category: 'SPORT', cc: '150 cc', mark: 'H', color: '#d32c30', accent: '#f1f1ee', style: 'sport' },
-  ninja400: { name: 'Kawasaki Ninja 400', short: 'NINJA 400', category: 'SPORT', cc: '399 cc', mark: 'K', color: '#63a866', accent: '#222626', style: 'sport' },
-};
+const catalog = await fetch('./data/catalog.json').then((response) => {
+  if (!response.ok) throw new Error(`Catalog request failed: ${response.status}`);
+  return response.json();
+});
+const bikes = Object.fromEntries(catalog.motorcycles.map((record) => [record.id, { name: record.displayName || `${record.manufacturer} ${record.model}`, short: record.short || record.model, category: (record.tag || record.category || '').toUpperCase(), cc: record.cc || record.specifications?.displacement || '', mark: record.mark || record.manufacturer?.slice(0, 1) || 'M', color: record.color || '#d6d7d8', accent: record.accent || '#d7482e', style: record.style || 'naked' }]));
 const products = {
   paint: [
-    { id: 'paint-stock', brand: 'STUDIO DEMO', name: 'Factory silver', price: 0, glyph: '●', color: '#c7c9ca', type: 'paint', value: '#c7c9ca', finish: 'Gloss' },
-    { id: 'paint-orange', brand: 'STUDIO DEMO', name: 'Voltage orange', price: 120, glyph: '●', color: '#f05b36', type: 'paint', value: '#f05b36', finish: 'Metallic' },
-    { id: 'paint-onyx', brand: 'STUDIO DEMO', name: 'Onyx black', price: 80, glyph: '●', color: '#292b2e', type: 'paint', value: '#292b2e', finish: 'Matte' },
-    { id: 'paint-red', brand: 'STUDIO DEMO', name: 'Track red', price: 120, glyph: '●', color: '#b9272d', type: 'paint', value: '#b9272d', finish: 'Gloss' },
+    { id: 'paint-stock', brand: 'VISUAL PREVIEW ONLY', name: 'Factory silver', price: null, glyph: '●', color: '#c7c9ca', type: 'paint', value: '#c7c9ca', finish: 'Gloss' },
+    { id: 'paint-orange', brand: 'VISUAL PREVIEW ONLY', name: 'Voltage orange', price: null, glyph: '●', color: '#f05b36', type: 'paint', value: '#f05b36', finish: 'Metallic' },
+    { id: 'paint-onyx', brand: 'VISUAL PREVIEW ONLY', name: 'Onyx black', price: null, glyph: '●', color: '#292b2e', type: 'paint', value: '#292b2e', finish: 'Matte' },
+    { id: 'paint-red', brand: 'VISUAL PREVIEW ONLY', name: 'Track red', price: null, glyph: '●', color: '#b9272d', type: 'paint', value: '#b9272d', finish: 'Gloss' },
   ],
   wheels: [
-    { id: 'wheel-stock', brand: 'FACTORY', name: 'OEM cast alloy', price: 0, glyph: '◎', type: 'wheel', value: 'stock' },
-    { id: 'wheel-forged', brand: 'STUDIO DEMO', name: 'Forged 5-spoke set', price: 480, glyph: '◎', type: 'wheel', value: 'forged' },
-    { id: 'wheel-cnc', brand: 'STUDIO DEMO', name: 'CNC split-spoke set', price: 620, glyph: '◉', type: 'wheel', value: 'cnc' },
+    { id: 'wheel-stock', brand: 'VISUAL PREVIEW ONLY', name: 'OEM cast alloy', price: null, glyph: '◎', type: 'wheel', value: 'stock' },
+    { id: 'wheel-forged', brand: 'VISUAL PREVIEW ONLY', name: 'Forged 5-spoke set', price: null, glyph: '◎', type: 'wheel', value: 'forged' },
+    { id: 'wheel-cnc', brand: 'VISUAL PREVIEW ONLY', name: 'CNC split-spoke set', price: null, glyph: '◉', type: 'wheel', value: 'cnc' },
   ],
   exhaust: [
-    { id: 'exhaust-stock', brand: 'FACTORY', name: 'OEM exhaust', price: 0, glyph: '≋', type: 'exhaust', value: 'stock' },
-    { id: 'exhaust-titanium', brand: 'STUDIO DEMO', name: 'Titanium shorty', price: 390, glyph: '≋', type: 'exhaust', value: 'titanium' },
-    { id: 'exhaust-carbon', brand: 'STUDIO DEMO', name: 'Carbon slip-on', price: 520, glyph: '≋', type: 'exhaust', value: 'carbon' },
+    { id: 'exhaust-stock', brand: 'VISUAL PREVIEW ONLY', name: 'OEM exhaust', price: null, glyph: '≋', type: 'exhaust', value: 'stock' },
+    { id: 'exhaust-titanium', brand: 'VISUAL PREVIEW ONLY', name: 'Titanium shorty', price: null, glyph: '≋', type: 'exhaust', value: 'titanium' },
+    { id: 'exhaust-carbon', brand: 'VISUAL PREVIEW ONLY', name: 'Carbon slip-on', price: null, glyph: '≋', type: 'exhaust', value: 'carbon' },
   ],
   suspension: [], brakes: [],
   accessories: [
-    { id: 'accessory-none', brand: 'FACTORY', name: 'No frame protection', price: 0, glyph: '⌁', type: 'accessories', value: false },
-    { id: 'accessory-guards', brand: 'STUDIO DEMO', name: 'Frame slider kit', price: 95, glyph: '⌁', type: 'accessories', value: true },
+    { id: 'accessory-none', brand: 'VISUAL PREVIEW ONLY', name: 'No frame protection', price: null, glyph: '⌁', type: 'accessories', value: false },
+    { id: 'accessory-guards', brand: 'VISUAL PREVIEW ONLY', name: 'Frame slider kit', price: null, glyph: '⌁', type: 'accessories', value: true },
   ],
 };
 const labels = { paint: 'Paint & finish', wheels: 'Wheels & tires', exhaust: 'Exhaust system', suspension: 'Suspension', brakes: 'Brakes', accessories: 'Accessories' };
-let state = { bike: 'mt15', paint: '#c7c9ca', finish: 'Gloss', wheel: 'stock', exhaust: 'stock', accessories: false };
+const initialAssetBike = catalog.motorcycles.find((record) => record.asset);
+let state = { bike: initialAssetBike?.id || catalog.motorcycles[0]?.id || 'mt15', paint: '#c7c9ca', finish: 'Gloss', wheel: 'stock', exhaust: 'stock', accessories: false };
 let history = [], future = [], activeCategory = 'paint', toastTimer;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#1c1d20');
 const camera = new THREE.PerspectiveCamera(35, 1, .1, 100);
-let azimuth = 0.55, polar = 1.26, distance = 7.1, autoRotate = false, dragging = false, lastPointer = { x: 0, y: 0 };
+let azimuth = 0.55, polar = 1.26, distance = 4.35, autoRotate = false, dragging = false, lastPointer = { x: 0, y: 0 };
 camera.position.set(5.8, 3.1, 5.3);
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -48,6 +51,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.13;
+const ktx2Loader = new KTX2Loader().setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/libs/basis/').detectSupport(renderer);
 
 scene.add(new THREE.HemisphereLight(0xdde4ee, 0x292724, 2.15));
 const keyLight = new THREE.DirectionalLight(0xffe4ce, 3.6);
@@ -60,6 +64,8 @@ const grid = new THREE.GridHelper(30, 60, '#38393b', '#292a2c'); grid.position.y
 
 let bikeGroup;
 let importedModel;
+const catalogModels = new Map();
+const catalogModelLoading = new Set();
 let useImportedModel = false;
 let photoFrames = [];
 let photoIndex = 0;
@@ -68,6 +74,8 @@ let photoDragRemainder = 0;
 let photoPointerX = null;
 let importedObjectUrls = [];
 const gltfLoader = new GLTFLoader();
+gltfLoader.setKTX2Loader(ktx2Loader);
+gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 const material = (color, roughness = .42, metalness = .25) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
 const darkMetal = material('#27292b', .52, .72), rubber = material('#151618', .83, .03), metal = material('#9b9ea0', .28, .85), silver = material('#d2d4d5', .27, .8), glass = new THREE.MeshStandardMaterial({ color: '#8ca5ad', roughness: .14, metalness: .2, transparent: true, opacity: .55 });
 function addMesh(parent, geometry, mat, position, scale, name) {
@@ -115,6 +123,17 @@ function createBike() {
     });
   }
   const bike = bikes[state.bike], group = new THREE.Group(); bikeGroup = group; group.position.y = 0; scene.add(group);
+  for (const model of catalogModels.values()) model.visible = false;
+  const bikeRecord = catalog.motorcycles.find((record) => record.id === state.bike);
+  if (bikeRecord?.asset) {
+    group.visible = false;
+    if (importedModel) importedModel.visible = false;
+    const model = catalogModels.get(bikeRecord.id);
+    if (model) model.visible = !photoMode;
+    else loadCatalogModel(bikeRecord);
+    updateUI();
+    return;
+  }
   const paintMat = material(state.paint, state.finish === 'Matte' ? .72 : .25, state.finish === 'Metallic' ? .78 : .28);
   const accentMat = material(bike.accent, .3, .28), bodyMat = state.bike === 'cbr150' || state.bike === 'ninja400' ? paintMat : paintMat;
   // Frame and powertrain
@@ -180,8 +199,9 @@ function createBike() {
 }
 
 function cameraPosition() {
-  camera.position.set(Math.sin(azimuth) * Math.sin(polar) * distance, Math.cos(polar) * distance + .48, Math.cos(azimuth) * Math.sin(polar) * distance);
-  camera.lookAt(0, .92, 0);
+  const targetY = catalog.motorcycles.find((record) => record.id === state.bike)?.asset ? .64 : .92;
+  camera.position.set(Math.sin(azimuth) * Math.sin(polar) * distance, Math.cos(polar) * distance + targetY, Math.cos(azimuth) * Math.sin(polar) * distance);
+  camera.lookAt(0, targetY, 0);
 }
 function resize() {
   const rect = stage.getBoundingClientRect(); if (!rect.width || !rect.height) return;
@@ -190,28 +210,45 @@ function resize() {
 const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(stage);
 function animate() { requestAnimationFrame(animate); if (autoRotate && !dragging) { if (photoMode && photoFrames.length > 1) showPhotoFrame((photoIndex + 1) % photoFrames.length); else if (!photoMode) azimuth += .0028; } if (bikeGroup && !photoMode && !useImportedModel) { const wheelSpin = autoRotate ? .01 : 0; bikeGroup.traverse((o) => { if ((o.name === 'FrontWheel' || o.name === 'RearWheel') && wheelSpin) o.rotation.z -= wheelSpin; }); } cameraPosition(); if (!photoMode) renderer.render(scene, camera); }
 function showToast(message) { const el = $('#toast'); el.textContent = message; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2400); }
-function savedBuilds() { try { return JSON.parse(localStorage.getItem('motoform-builds') || '[]'); } catch { return []; } }
+function savedBuilds() { try { return JSON.parse(localStorage.getItem('motoform-builds') || '[]').filter((build) => catalog.motorcycles.some((bike) => bike.id === build.state?.bike)); } catch { return []; } }
 function saveBuilds(builds) { localStorage.setItem('motoform-builds', JSON.stringify(builds)); $('#garage-count').textContent = String(builds.length); }
-function currentPrice() { return Object.values(products).flat().filter((part) => part.type === 'paint' ? part.value === state.paint : part.type === 'wheel' ? part.value === state.wheel : part.type === 'exhaust' ? part.value === state.exhaust : part.type === 'accessories' ? part.value === state.accessories : false).reduce((sum, part) => sum + part.price, 0); }
+function currentPrice() {
+  const bike = catalog.motorcycles.find((record) => record.id === state.bike);
+  if (!bike?.price) return null;
+  const changed = state.paint !== '#c7c9ca' || state.finish !== 'Gloss' || state.wheel !== 'stock' || state.exhaust !== 'stock' || state.accessories;
+  return changed ? null : bike.price;
+}
+function formatPrice(value) { return value == null ? 'Not priced' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
 function installedCount() { return 1 + (state.wheel !== 'stock' ? 1 : 0) + (state.exhaust !== 'stock' ? 1 : 0) + (state.accessories ? 1 : 0) + (state.paint !== '#c7c9ca' ? 1 : 0); }
 function updateUI() {
-  const bike = bikes[state.bike];
-  $('#bike-select').value = state.bike; $('#bike-subtitle').textContent = `2024 · Standard · ${bike.cc}`;
+  const bike = bikes[state.bike], record = catalog.motorcycles.find((item) => item.id === state.bike);
+  const select = $('#bike-select');
+  const expectedOptions = catalog.motorcycles.map((record) => `${record.id}:${record.selectorLabel || `${record.manufacturer} ${record.model}`}`).join('|');
+  const currentOptions = [...select.options].map((option) => `${option.value}:${option.textContent}`).join('|');
+  if (currentOptions !== expectedOptions) select.replaceChildren(...catalog.motorcycles.map((record) => new Option(record.selectorLabel || `${record.manufacturer} ${record.model}`, record.id)));
+  select.value = state.bike; $('#bike-subtitle').textContent = record?.asset ? `${record.asset.license} · 3D asset` : `${record?.year || ''} · ${record?.variant || ''} · ${record?.source?.name || ''}`;
   $('#viewer-bike-name').textContent = bike.short; $('#stage-model').textContent = bike.name;
-  $('.model-tag small').textContent = `${bike.category} · 2024`;
+  $('.model-tag small').textContent = record?.asset ? `${bike.category} · ${record.asset.version}` : `${bike.category} · ${record?.year || ''}`;
   $('.tag-brand').textContent = bike.mark; $('.tag-brand').style.color = bike.accent;
-  const total = currentPrice(); $('#build-total').textContent = `$${total.toLocaleString('en-US')}`;
+  const total = currentPrice(); $('#build-total').textContent = formatPrice(total);
   $('#build-items').textContent = `${installedCount()} item${installedCount() === 1 ? '' : 's'} installed`;
   renderBuildSummary(); renderCategoryOptions(); renderProducts();
-  $('.fitment-banner small').textContent = `Demo fitment · ${bike.name} 2024`;
-  $('.fitment-banner strong').textContent = 'Visual preview only';
-  $('#model-source-label').hidden = !useImportedModel || photoMode;
-  $('#model-source-label').textContent = useImportedModel ? 'Imported mesh · 3D parts not mapped' : '';
+  $('#data-eyebrow').textContent = record?.source ? `SOURCE: ${record.source.name.toUpperCase()}` : `SOURCE: ${record?.asset?.creator || '3D MODEL'} · ${record?.asset?.license || ''}`;
+  $('#data-status-title').textContent = record?.asset ? '3D asset · generic fitment' : 'Manufacturer specification';
+  $('#data-status-note').textContent = record?.priceLabel || (record?.asset ? 'No specific bike fitment or market price' : 'Price not listed');
+  $('#data-source-link').href = record?.source?.url || record?.asset?.source || '#';
+  $('#bike-facts').innerHTML = Object.entries(record?.specifications || {}).map(([key, value]) => `<div class="bike-fact"><span>${key.replace(/([A-Z])/g, ' $1').replace(/^./, (letter) => letter.toUpperCase())}</span><strong>${value}</strong></div>`).join('');
+  $('#generated-image-card').hidden = !record?.asset?.sourceImage;
+  if (record?.asset?.sourceImage) { $('#generated-image-card img').src = `./${record.asset.sourceImage}`; $('#generated-image-card a').href = `./${record.asset.sourceImage}`; }
+  $('#options-heading').textContent = record?.asset ? 'No mapped parts' : 'Visual customization';
+  $('#model-source-label').hidden = photoMode;
+  $('#model-source-label').textContent = record?.asset ? `Included ${record.asset.license} mesh · generic bike` : useImportedModel ? 'Imported mesh · 3D parts not mapped' : 'Illustrative geometry · not a Yamaha OEM asset';
   $('#undo-button').disabled = history.length === 0;
   $('#redo-button').disabled = future.length === 0;
 }
 function renderBuildSummary() {
-  const entries = [{ title: bikes[state.bike].name, detail: 'Base motorcycle', icon: '◈', active: true }];
+  const record = catalog.motorcycles.find((bike) => bike.id === state.bike);
+  const entries = [{ title: bikes[state.bike].name, detail: record?.priceLabel || (record?.asset ? 'Generic 3D asset · no market price' : 'Base bike'), icon: '◈', active: true }];
   const currentPaint = products.paint.find((p) => p.value === state.paint); if (currentPaint && currentPaint.price) entries.push({ title: currentPaint.name, detail: currentPaint.finish, icon: '◉' });
   const wheel = products.wheels.find((p) => p.value === state.wheel); if (wheel && wheel.price) entries.push({ title: wheel.name, detail: 'Wheel set', icon: '◎' });
   const exhaust = products.exhaust.find((p) => p.value === state.exhaust); if (exhaust && exhaust.price) entries.push({ title: exhaust.name, detail: 'Exhaust', icon: '≋' });
@@ -220,31 +257,21 @@ function renderBuildSummary() {
 }
 function renderCategoryOptions() {
   const target = $('#custom-options');
+  if (catalog.motorcycles.find((record) => record.id === state.bike)?.asset) { target.innerHTML = '<div class="option-heading">Parts not mapped</div><div class="option-caption">This model has no verified attachment points or compatible parts in the catalog.</div>'; return; }
   if (activeCategory === 'paint') {
     target.innerHTML = `<div class="option-heading">Choose a color</div><div class="swatch-row">${products.paint.map((p) => `<button class="swatch ${state.paint === p.value ? 'selected' : ''}" style="--swatch:${p.value}" data-paint="${p.id}" title="${p.name}" aria-label="${p.name}" aria-pressed="${state.paint === p.value}"></button>`).join('')}<button class="swatch" style="--swatch:conic-gradient(#f66,#fc3,#6c9,#5cf,#96f,#f66)" id="custom-color" title="Choose custom color" aria-label="Choose custom color">+</button></div><div class="finish-row">${['Gloss', 'Matte', 'Metallic'].map((finish) => `<button class="finish-chip ${state.finish === finish ? 'selected' : ''}" data-finish="${finish}">${finish}</button>`).join('')}</div><div class="option-caption">Paint preview · changes body panels</div>`;
     target.querySelectorAll('[data-paint]').forEach((button) => button.addEventListener('click', () => { const part = products.paint.find((p) => p.id === button.dataset.paint); changeState({ paint: part.value, finish: part.finish }); }));
     target.querySelectorAll('[data-finish]').forEach((button) => button.addEventListener('click', () => changeState({ finish: button.dataset.finish })));
     $('#custom-color')?.addEventListener('click', () => { const picker = document.createElement('input'); picker.type = 'color'; picker.value = state.paint; picker.oninput = () => changeState({ paint: picker.value }); picker.click(); });
-  } else if (activeCategory === 'wheels') target.innerHTML = `<div class="option-heading">Wheel style</div><div class="option-caption">Select a set to preview a 3D wheel replacement.</div>`;
-  else if (activeCategory === 'exhaust') target.innerHTML = `<div class="option-heading">Exhaust finish</div><div class="option-caption">Each option replaces the modeled exhaust assembly.</div>`;
-  else if (activeCategory === 'accessories') target.innerHTML = `<div class="option-heading">Protection</div><div class="option-caption">Install or remove the modeled frame slider kit.</div>`;
-  else target.innerHTML = `<div class="option-heading">Not available in this demo</div><div class="option-caption">No verified 3D component mapping is configured for this motorcycle.</div>`;
+  } else target.innerHTML = `<div class="option-heading">Unavailable for this model</div><div class="option-caption">No verified component mapping or compatible product record is configured.</div>`;
 }
 function isInstalled(part) { if (part.type === 'paint') return state.paint === part.value; if (part.type === 'wheel') return state.wheel === part.value; if (part.type === 'exhaust') return state.exhaust === part.value; if (part.type === 'accessories') return state.accessories === part.value; return false; }
 function renderProducts() {
-  const list = $('#product-list'), search = $('#parts-search').value.trim().toLowerCase();
-  const choices = products[activeCategory] || [];
-  $('#options-heading').textContent = labels[activeCategory];
-  $('#parts-count').textContent = `${String(choices.length).padStart(2, '0')} OPTIONS`;
-  if (!choices.length) { list.innerHTML = `<div class="empty-state"><span>⌁</span><strong>Coming soon</strong><small>${labels[activeCategory]} aren't mapped to a verified 3D component for this demo bike yet.</small></div>`; return; }
-  const filtered = choices.filter((part) => `${part.name} ${part.brand}`.toLowerCase().includes(search));
-  list.innerHTML = filtered.length ? filtered.map((part) => `<article class="product-card ${isInstalled(part) ? 'installed' : ''}"><div class="product-art" style="${part.type === 'paint' ? `color:${part.value};` : ''}"><span class="art-${part.type}">${part.glyph}</span></div><div class="product-info"><span class="product-brand">${part.brand}</span><h3>${part.name}</h3><span class="product-fit">Demo visual preview · fitment unverified</span><div class="product-foot"><span class="product-price">${part.price ? `$${part.price}` : 'Included'}</span>${isInstalled(part) ? '<span class="selected-label">Selected</span>' : ''}<button class="product-add" data-part="${part.id}" aria-label="${isInstalled(part) ? 'Remove' : 'Install'} ${part.name}" title="${isInstalled(part) ? 'Remove' : 'Install'}">${isInstalled(part) ? '✓' : '+'}</button></div></div></article>`).join('') : '<div class="empty-state"><strong>No matching parts</strong><small>Try a different search.</small></div>';
-  list.querySelectorAll('[data-part]').forEach((button) => button.addEventListener('click', () => {
-    const part = choices.find((p) => p.id === button.dataset.part); if (!part) return;
-    const next = isInstalled(part) ? part.type === 'paint' ? { paint: '#c7c9ca', finish: 'Gloss' } : part.type === 'wheel' ? { wheel: 'stock' } : part.type === 'exhaust' ? { exhaust: 'stock' } : { accessories: false } : part.type === 'paint' ? { paint: part.value, finish: part.finish } : part.type === 'wheel' ? { wheel: part.value } : part.type === 'exhaust' ? { exhaust: part.value } : { accessories: part.value };
-    changeState(next);
-  }));
+  const list = $('#product-list');
+  const record = catalog.motorcycles.find((bike) => bike.id === state.bike);
+  list.innerHTML = `<div class="empty-state"><span>⌁</span><strong>No sourced aftermarket listings yet</strong><small>${record?.asset ? 'This generic model has no verified manufacturer fitment.' : 'No vendor listings with verified year/variant compatibility and prices are configured.'}</small></div>`;
 }
+
 function changeState(changes, notify = true) {
   history.push(JSON.stringify(state)); if (history.length > 40) history.shift(); future = [];
   state = { ...state, ...changes }; createBike();
@@ -270,9 +297,12 @@ function setPhotoMode(enabled) {
   $('#photo-empty').hidden = !enabled || photoFrames.length > 0;
   $('#turntable-image').hidden = !enabled || photoFrames.length === 0;
   canvas.hidden = enabled;
-  $('#model-source-label').hidden = !useImportedModel || enabled;
+  const currentRecord = catalog.motorcycles.find((record) => record.id === state.bike);
+  $('#model-source-label').hidden = enabled;
+  $('#model-source-label').textContent = currentRecord?.asset ? `Included ${currentRecord.asset.license} mesh · generic bike` : useImportedModel ? 'Imported mesh · 3D parts not mapped' : 'Illustrative geometry · not a Yamaha OEM asset';
   if (bikeGroup) bikeGroup.visible = !enabled && !useImportedModel;
   if (importedModel) importedModel.visible = !enabled && useImportedModel;
+  for (const record of catalog.motorcycles) { const model = catalogModels.get(record.id); if (model) model.visible = !enabled && state.bike === record.id; }
   if (enabled && photoFrames.length) showPhotoFrame(photoIndex);
   resize();
 }
@@ -326,17 +356,41 @@ function loadModelFile(file) {
   })).catch((error) => { console.error('Unable to read the selected 3D model:', error); $('#load-state').classList.add('hidden'); showToast('Unable to read this 3D model'); });
 }
 
+function loadCatalogModel(record) {
+  if (catalogModelLoading.has(record.id) || catalogModels.has(record.id)) return;
+  catalogModelLoading.add(record.id);
+  $('#load-state').innerHTML = '<span class="loader"></span><span>Loading licensed 3D model...</span>';
+  $('#load-state').classList.remove('hidden');
+  gltfLoader.load(`./${record.asset.file}`, (gltf) => {
+    const model = gltf.scene;
+    model.traverse((object) => { if (object.isMesh) { object.castShadow = true; object.receiveShadow = true; } });
+    const bounds = new THREE.Box3().setFromObject(model);
+    const center = bounds.getCenter(new THREE.Vector3());
+    model.position.set(-center.x, -bounds.min.y, -center.z);
+    scene.add(model);
+    model.visible = state.bike === record.id && !photoMode;
+    catalogModels.set(record.id, model);
+    catalogModelLoading.delete(record.id);
+    $('#load-state').classList.add('hidden');
+    $('#load-state').innerHTML = '<span class="loader"></span><span>Building your bike...</span>';
+    updateUI();
+  }, undefined, (error) => {
+    catalogModelLoading.delete(record.id);
+    $('#load-state').classList.add('hidden');
+    console.error('Unable to load the catalog 3D asset:', error);
+    showToast('Unable to load the local dirt-bike model');
+  });
+}
+
 $('#category-list').addEventListener('click', (event) => {
   const button = event.target.closest('[data-category]'); if (!button) return;
   activeCategory = button.dataset.category;
   document.querySelectorAll('.category').forEach((item) => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-selected', String(active)); });
   renderCategoryOptions(); renderProducts();
 });
-$('#bike-select').addEventListener('change', (event) => { useImportedModel = false; if (importedModel) importedModel.visible = false; changeState({ bike: event.target.value }); });
-$('#change-bike').addEventListener('click', () => { $('#bike-select').focus(); showToast('Choose a motorcycle from the selector'); });
-$('#parts-search').addEventListener('input', renderProducts);
-$('#sort-button').addEventListener('click', () => showToast('Showing featured demo options'));
-$('#filter-button').addEventListener('click', () => showToast('All options shown for the selected category'));
+$('#bike-select').addEventListener('change', (event) => { useImportedModel = false; if (importedModel) importedModel.visible = false; distance = catalog.motorcycles.find((record) => record.id === event.target.value)?.asset ? 4.35 : 7.1; changeState({ bike: event.target.value }); });
+$('#change-bike').addEventListener('click', () => { const record = catalog.motorcycles.find((bike) => bike.id === state.bike); window.open(record.source?.url || record.asset?.source, '_blank', 'noopener'); });
+$('#filter-button').addEventListener('click', () => showToast('Open the linked source for full specifications and pricing region'));
 $('#studio-select').addEventListener('click', () => { const bright = scene.background.getHexString() === '1c1d20'; scene.background.set(bright ? '#13171d' : '#1c1d20'); floor.material.color.set(bright ? '#1d2228' : '#222326'); showToast(bright ? 'Night studio environment' : 'Graphite studio environment'); });
 $('#shadow-toggle').addEventListener('click', (event) => { renderer.shadowMap.enabled = !renderer.shadowMap.enabled; event.currentTarget.classList.toggle('selected', !renderer.shadowMap.enabled); showToast(renderer.shadowMap.enabled ? 'Floor shadows on' : 'Floor shadows off'); });
 $('#fullscreen-toggle').addEventListener('click', () => { if (!document.fullscreenElement) stage.requestFullscreen?.(); else document.exitFullscreen?.(); });
@@ -357,10 +411,10 @@ const modelInfoDialog = $('#model-info-dialog');
 $('#photo-model-info').addEventListener('click', () => modelInfoDialog.showModal());
 $('#model-info-close').addEventListener('click', () => modelInfoDialog.close());
 $('#model-info-import').addEventListener('click', () => { modelInfoDialog.close(); $('#model-input').click(); });
-$('#reset-camera').addEventListener('click', () => { azimuth = .55; polar = 1.26; distance = 7.1; autoRotate = false; $('#rotate-toggle').classList.remove('on'); });
+$('#reset-camera').addEventListener('click', () => { azimuth = .55; polar = 1.26; distance = catalog.motorcycles.find((record) => record.id === state.bike)?.asset ? 4.35 : 7.1; autoRotate = false; $('#rotate-toggle').classList.remove('on'); });
 $('#undo-button').addEventListener('click', () => { if (!history.length) return; future.push(JSON.stringify(state)); restoreState(history.pop()); });
 $('#redo-button').addEventListener('click', () => { if (!future.length) return; history.push(JSON.stringify(state)); restoreState(future.pop()); });
-$('#zoom-in').addEventListener('click', () => { distance = Math.max(4.6, distance - .45); }); $('#zoom-out').addEventListener('click', () => { distance = Math.min(10, distance + .45); });
+$('#zoom-in').addEventListener('click', () => { distance = Math.max(2.4, distance - .45); }); $('#zoom-out').addEventListener('click', () => { distance = Math.min(10, distance + .45); });
 document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => {
   const views = { front: [Math.PI / 2, 1.18], side: [.55, 1.26], rear: [-Math.PI / 2, 1.18] };
   azimuth = views[button.dataset.view][0]; polar = views[button.dataset.view][1];
@@ -380,7 +434,7 @@ $('#turntable-image').addEventListener('pointermove', (event) => {
 $('#turntable-image').addEventListener('pointerup', () => { photoPointerX = null; });
 $('#turntable-image').addEventListener('pointercancel', () => { photoPointerX = null; });
 $('#turntable-image').addEventListener('wheel', (event) => { if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) showPhotoFrame(photoIndex + Math.sign(event.deltaX)); }, { passive: true });
-canvas.addEventListener('wheel', (event) => { event.preventDefault(); distance = THREE.MathUtils.clamp(distance + event.deltaY * .004, 4.6, 10); }, { passive: false });
+canvas.addEventListener('wheel', (event) => { event.preventDefault(); distance = THREE.MathUtils.clamp(distance + event.deltaY * .004, 2.4, 10); }, { passive: false });
 $('#save-build').addEventListener('click', () => {
   const builds = savedBuilds(), name = `${bikes[state.bike].short} · ${new Date().toLocaleDateString()}`;
   builds.unshift({ id: crypto.randomUUID?.() || String(Date.now()), name, state: { ...state }, total: currentPrice(), savedAt: new Date().toISOString() });
@@ -389,12 +443,12 @@ $('#save-build').addEventListener('click', () => {
 const dialog = $('#garage-dialog');
 function renderGarage() {
   const builds = savedBuilds(); $('#garage-count').textContent = String(builds.length);
-  $('#garage-builds').innerHTML = builds.length ? builds.map((build) => `<div class="saved-build"><span class="saved-build-mark">◈</span><span class="saved-build-info"><strong>${build.name}</strong><small>${bikes[build.state.bike]?.name || build.state.bike} · $${Number(build.total).toLocaleString('en-US')}</small></span><button data-load-build="${build.id}">Load build</button></div>`).join('') : '<div class="garage-empty">Your garage is looking fresh.<br>Save a build from the studio to keep it here.</div>';
+  $('#garage-builds').innerHTML = builds.length ? builds.map((build) => `<div class="saved-build"><span class="saved-build-mark">◈</span><span class="saved-build-info"><strong>${build.name}</strong><small>${bikes[build.state.bike]?.name || build.state.bike} · ${formatPrice(build.total)}</small></span><button data-load-build="${build.id}">Load build</button></div>`).join('') : '<div class="garage-empty">Your garage is looking fresh.<br>Save a build from the studio to keep it here.</div>';
   $('#garage-builds').querySelectorAll('[data-load-build]').forEach((button) => button.addEventListener('click', () => { const build = builds.find((item) => item.id === button.dataset.loadBuild); if (build) { history.push(JSON.stringify(state)); future = []; restoreState(JSON.stringify(build.state)); dialog.close(); showToast('Build loaded'); } }));
 }
 $('#garage-open').addEventListener('click', () => { renderGarage(); dialog.showModal(); }); $('#garage-close').addEventListener('click', () => dialog.close());
-$('#new-build').addEventListener('click', () => { dialog.close(); changeState({ bike: 'mt15', paint: '#c7c9ca', finish: 'Gloss', wheel: 'stock', exhaust: 'stock', accessories: false }); showToast('Fresh build started'); });
-document.addEventListener('keydown', (event) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); $('#parts-search').focus(); } if (event.key === 'Escape' && document.activeElement === canvas) document.activeElement.blur(); });
+$('#new-build').addEventListener('click', () => { dialog.close(); changeState({ bike: initialAssetBike?.id || catalog.motorcycles[0].id, paint: '#c7c9ca', finish: 'Gloss', wheel: 'stock', exhaust: 'stock', accessories: false }); showToast('Fresh build started'); });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && document.activeElement === canvas) document.activeElement.blur(); });
 function showWebGLState() { $('#load-state').innerHTML = '<span style="font-size:23px;color:#ff7755">◇</span><span>3D preview is unavailable in this browser.</span><span style="font-size:9px">Enable WebGL to explore your motorcycle.</span>'; }
-try { resize(); createBike(); renderer.render(scene, camera); $('#load-state').classList.add('hidden'); } catch (error) { console.error('Unable to initialize the motorcycle preview:', error); showWebGLState(); }
+try { resize(); createBike(); renderer.render(scene, camera); if (!catalog.motorcycles.find((record) => record.id === state.bike)?.asset) $('#load-state').classList.add('hidden'); } catch (error) { console.error('Unable to initialize the motorcycle preview:', error); showWebGLState(); }
 saveBuilds(savedBuilds()); animate();
