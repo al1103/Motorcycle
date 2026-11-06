@@ -37,7 +37,37 @@
       "mark": "Y",
       "accent": "#d7482e",
       "style": "naked",
-      "selectorLabel": "Yamaha MT-15 · 2026 spec"
+      "selectorLabel": "Yamaha MT-15 · 2026 spec",
+      "recommendations": [
+        {
+          "name": "Bảo vệ xe",
+          "items": [
+            "Gù chống đổ",
+            "Ốp két nước",
+            "Tank pad"
+          ],
+          "why": "Ý tưởng bảo vệ cho xe đi phố. Kiểm tra điểm bắt và khoảng hở theo đúng đời xe."
+        },
+        {
+          "name": "Tư thế lái",
+          "items": [
+            "Bao tay",
+            "Gương chiếu hậu",
+            "Yên xe"
+          ],
+          "why": "Có thể cân nhắc theo nhu cầu sử dụng; kiểm tra kích thước và quy định giao thông."
+        },
+        {
+          "name": "Ngoại hình",
+          "items": [
+            "Tem decal",
+            "Kính chắn gió",
+            "Đuôi biển số"
+          ],
+          "why": "Thay đổi phong cách; không đại diện cho món đồ tương thích đã xác minh."
+        }
+      ],
+      "recommendationNote": "Gợi ý theo phong cách xe, không phải xác nhận fitment."
     },
     {
       "id": "dirt250",
@@ -69,7 +99,331 @@
       "mark": "3D",
       "accent": "#6552c8",
       "style": "asset",
-      "selectorLabel": "Generic Dirt Bike · CC0 3D model"
+      "selectorLabel": "Generic Dirt Bike · CC0 3D model",
+      "recommendations": [
+        {
+          "name": "Bảo vệ người lái",
+          "items": [
+            "Hand guards",
+            "Skid plate",
+            "Handlebar pad"
+          ],
+          "why": "Nhóm phụ kiện địa hình phổ biến; kiểm tra điểm bắt trên đúng xe."
+        },
+        {
+          "name": "Thiết lập địa hình",
+          "items": [
+            "Lốp gai",
+            "Bảo vệ két nước",
+            "Chain guide"
+          ],
+          "why": "Chọn theo mặt đường; thông số và fitment phụ thuộc xe cụ thể."
+        },
+        {
+          "name": "Bảo dưỡng",
+          "items": [
+            "Bao tay",
+            "Tay phanh/côn",
+            "Lọc gió"
+          ],
+          "why": "Tuân thủ lịch bảo dưỡng và thông số của nhà sản xuất."
+        }
+      ],
+      "recommendationNote": "Gợi ý theo phong cách xe, không phải xác nhận fitment."
+    },
+    {
+      "id": "cbr150",
+      "manufacturer": "Honda",
+      "model": "CBR150R",
+      "year": null,
+      "variant": "Not yet verified",
+      "category": "Sport",
+      "price": null,
+      "specifications": {},
+      "dataStatus": "Catalog listing only. Manufacturer specs and exact-year 3D views have not been sourced.",
+      "displayName": "Honda CBR150R",
+      "short": "CBR150R",
+      "tag": "SPORT",
+      "cc": "Details pending",
+      "mark": "H",
+      "accent": "#be3338",
+      "style": "sport",
+      "selectorLabel": "Honda CBR150R · details pending",
+      "recommendations": [
+        {
+          "name": "Bảo vệ",
+          "items": [
+            "Gù chống đổ",
+            "Bảo vệ lốc máy",
+            "Ốp két nước"
+          ],
+          "why": "Ưu tiên kiểm tra mounting point và khoảng hở khi lắp."
+        },
+        {
+          "name": "Điều khiển",
+          "items": [
+            "Tay phanh/côn",
+            "Bao tay",
+            "Gác chân"
+          ],
+          "why": "Kiểm tra hành trình, độ rơ và an toàn sau khi thay."
+        },
+        {
+          "name": "Ngoại hình",
+          "items": [
+            "Tem decal",
+            "Kính chắn gió",
+            "Pát biển số"
+          ],
+          "why": "Ý tưởng phong cách; xác nhận quy định địa phương trước khi thay đổi."
+        }
+      ],
+      "recommendationNote": "Gợi ý theo phong cách xe, không phải xác nhận fitment."
+    },
+    {
+      "id": "r15",
+      "manufacturer": "Yamaha",
+      "model": "R15",
+      "year": null,
+      "variant": "Not yet verified",
+      "category": "Sport",
+      "price": null,
+      "specifications": {},
+      "dataStatus": "Catalog listing only. Manufacturer specs and exact-year 3D views have not been sourced.",
+      "displayName": "Yamaha R15",
+      "short": "R15",
+      "tag": "SPORT",
+      "cc": "Details pending",
+      "mark": "Y",
+      "accent": "#3177b4",
+      "style": "sport",
+      "selectorLabel": "Yamaha R15 · details pending",
+      "recommendations": [
+        {
+          "name": "Bảo vệ",
+          "items": [
+            "Gù chống đổ",
+            "Bảo vệ lốc máy",
+            "Ốp két nước"
+          ],
+          "why": "Ưu tiên kiểm tra mounting point và khoảng hở khi lắp."
+        },
+        {
+          "name": "Điều khiển",
+          "items": [
+            "Tay phanh/côn",
+            "Bao tay",
+            "Gác chân"
+          ],
+          "why": "Kiểm tra hành trình, độ rơ và an toàn sau khi thay."
+        },
+        {
+          "name": "Ngoại hình",
+          "items": [
+            "Tem decal",
+            "Kính chắn gió",
+            "Pát biển số"
+          ],
+          "why": "Ý tưởng phong cách; xác nhận quy định địa phương trước khi thay đổi."
+        }
+      ],
+      "recommendationNote": "Gợi ý theo phong cách xe, không phải xác nhận fitment."
+    },
+    {
+      "id": "ninja400",
+      "manufacturer": "Kawasaki",
+      "model": "Ninja 400",
+      "year": null,
+      "variant": "Not yet verified",
+      "category": "Sport",
+      "price": null,
+      "specifications": {},
+      "dataStatus": "Catalog listing only. Manufacturer specs and exact-year 3D views have not been sourced.",
+      "displayName": "Kawasaki Ninja 400",
+      "short": "Ninja 400",
+      "tag": "SPORT",
+      "cc": "Details pending",
+      "mark": "K",
+      "accent": "#70a865",
+      "style": "sport",
+      "selectorLabel": "Kawasaki Ninja 400 · details pending",
+      "recommendations": [
+        {
+          "name": "Bảo vệ",
+          "items": [
+            "Gù chống đổ",
+            "Bảo vệ lốc máy",
+            "Ốp két nước"
+          ],
+          "why": "Ưu tiên kiểm tra mounting point và khoảng hở khi lắp."
+        },
+        {
+          "name": "Điều khiển",
+          "items": [
+            "Tay phanh/côn",
+            "Bao tay",
+            "Gác chân"
+          ],
+          "why": "Kiểm tra hành trình, độ rơ và an toàn sau khi thay."
+        },
+        {
+          "name": "Ngoại hình",
+          "items": [
+            "Tem decal",
+            "Kính chắn gió",
+            "Pát biển số"
+          ],
+          "why": "Ý tưởng phong cách; xác nhận quy định địa phương trước khi thay đổi."
+        }
+      ],
+      "recommendationNote": "Gợi ý theo phong cách xe, không phải xác nhận fitment."
+    },
+    {
+      "id": "pcx160",
+      "manufacturer": "Honda",
+      "model": "PCX 160",
+      "year": null,
+      "variant": "Not yet verified",
+      "category": "Scooter",
+      "price": null,
+      "specifications": {},
+      "dataStatus": "Catalog listing only. Manufacturer specs and exact-year 3D views have not been sourced.",
+      "displayName": "Honda PCX 160",
+      "short": "PCX 160",
+      "tag": "SCOOTER",
+      "cc": "Details pending",
+      "mark": "H",
+      "accent": "#d8d9da",
+      "style": "naked",
+      "selectorLabel": "Honda PCX 160 · details pending",
+      "recommendations": [
+        {
+          "name": "Tiện ích",
+          "items": [
+            "Thùng sau",
+            "Giá đỡ điện thoại",
+            "Cổng sạc"
+          ],
+          "why": "Cân nhắc tải trọng, nguồn điện và ngàm lắp riêng của đời xe."
+        },
+        {
+          "name": "Bảo vệ",
+          "items": [
+            "Ốp tay lái",
+            "Ốp sàn",
+            "Bảo vệ giảm xóc"
+          ],
+          "why": "Kiểm tra khoảng hở, điểm bắt và khả năng bảo dưỡng."
+        },
+        {
+          "name": "Thoải mái",
+          "items": [
+            "Yên xe",
+            "Kính chắn gió",
+            "Bao tay"
+          ],
+          "why": "Chọn theo nhu cầu sử dụng; đối chiếu kích thước trước khi mua."
+        }
+      ],
+      "recommendationNote": "Gợi ý theo phong cách xe, không phải xác nhận fitment."
+    },
+    {
+      "id": "xs155",
+      "manufacturer": "Yamaha",
+      "model": "XSR155",
+      "year": null,
+      "variant": "Not yet verified",
+      "category": "Classic",
+      "price": null,
+      "specifications": {},
+      "dataStatus": "Catalog listing only. Manufacturer specs and exact-year 3D views have not been sourced.",
+      "displayName": "Yamaha XSR155",
+      "short": "XSR155",
+      "tag": "CLASSIC",
+      "cc": "Details pending",
+      "mark": "Y",
+      "accent": "#ac8b63",
+      "style": "naked",
+      "selectorLabel": "Yamaha XSR155 · details pending",
+      "recommendations": [
+        {
+          "name": "Phong cách",
+          "items": [
+            "Gương cổ điển",
+            "Yên bọc da",
+            "Tay lái"
+          ],
+          "why": "Ý tưởng thẩm mỹ; đảm bảo tư thế, góc lái và dây cáp an toàn."
+        },
+        {
+          "name": "Bảo vệ",
+          "items": [
+            "Bảo vệ lốc máy",
+            "Baga",
+            "Chắn bùn"
+          ],
+          "why": "Kiểm tra tải trọng và điểm bắt chính xác theo biến thể."
+        },
+        {
+          "name": "Tiện ích",
+          "items": [
+            "Túi hông",
+            "Giá hành lý",
+            "Đèn phụ trợ"
+          ],
+          "why": "Tuân thủ tải trọng, đấu điện và quy định chiếu sáng."
+        }
+      ],
+      "recommendationNote": "Gợi ý theo phong cách xe, không phải xác nhận fitment."
+    },
+    {
+      "id": "raider150",
+      "manufacturer": "Suzuki",
+      "model": "Raider R150",
+      "year": null,
+      "variant": "Not yet verified",
+      "category": "Underbone",
+      "price": null,
+      "specifications": {},
+      "dataStatus": "Catalog listing only. Manufacturer specs and exact-year 3D views have not been sourced.",
+      "displayName": "Suzuki Raider R150",
+      "short": "Raider R150",
+      "tag": "UNDERBONE",
+      "cc": "Details pending",
+      "mark": "S",
+      "accent": "#c3423c",
+      "style": "naked",
+      "selectorLabel": "Suzuki Raider R150 · details pending",
+      "recommendations": [
+        {
+          "name": "Đi lại hàng ngày",
+          "items": [
+            "Baga",
+            "Giá đỡ điện thoại",
+            "Bao tay"
+          ],
+          "why": "Cân nhắc độ chắc chắn và khoảng hở tay lái."
+        },
+        {
+          "name": "Bảo vệ",
+          "items": [
+            "Ốp sườn",
+            "Bảo vệ xích",
+            "Bảo vệ máy"
+          ],
+          "why": "Xác minh đúng đời và vị trí lắp với cửa hàng."
+        },
+        {
+          "name": "Ngoại hình",
+          "items": [
+            "Tem decal",
+            "Gương chiếu hậu",
+            "Đèn hợp chuẩn"
+          ],
+          "why": "Không thay đổi chức năng an toàn hoặc vi phạm quy định."
+        }
+      ],
+      "recommendationNote": "Gợi ý theo phong cách xe, không phải xác nhận fitment."
     }
   ]
 }

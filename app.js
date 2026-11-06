@@ -36,7 +36,7 @@ const products = {
 };
 const labels = { paint: 'Paint & finish', wheels: 'Wheels & tires', exhaust: 'Exhaust system', suspension: 'Suspension', brakes: 'Brakes', accessories: 'Accessories' };
 const initialAssetBike = catalog.motorcycles.find((record) => record.asset);
-let state = { bike: initialAssetBike?.id || catalog.motorcycles[0]?.id || 'mt15', paint: '#c7c9ca', finish: 'Gloss', wheel: 'stock', exhaust: 'stock', accessories: false };
+let state = { bike: catalog.motorcycles[0]?.id || initialAssetBike?.id || 'mt15', paint: '#c7c9ca', finish: 'Gloss', wheel: 'stock', exhaust: 'stock', accessories: false };
 let history = [], future = [], activeCategory = 'paint', toastTimer;
 
 const scene = new THREE.Scene();
@@ -73,6 +73,17 @@ let photoMode = false;
 let photoDragRemainder = 0;
 let photoPointerX = null;
 let importedObjectUrls = [];
+let viewGenerationTimer;
+let viewGenerationId = 0;
+const generatedBikeViews = new Map();
+let activeImageView = 'front-left';
+const imageViewAngles = {
+  'front-left': { label: 'Trước ¾', azimuth: 1.0, polar: 1.18 },
+  left: { label: 'Trái', azimuth: .05, polar: 1.38 },
+  rear: { label: 'Sau', azimuth: -1.45, polar: 1.2 },
+  right: { label: 'Phải', azimuth: Math.PI - .05, polar: 1.38 },
+  top: { label: 'Trên', azimuth: .85, polar: .28 },
+};
 const gltfLoader = new GLTFLoader();
 gltfLoader.setKTX2Loader(ktx2Loader);
 gltfLoader.setMeshoptDecoder(MeshoptDecoder);
@@ -196,6 +207,7 @@ function createBike() {
   group.visible = !useImportedModel && !photoMode;
   if (importedModel) importedModel.visible = useImportedModel && !photoMode;
   updateUI();
+  scheduleGeneratedViews();
 }
 
 function cameraPosition() {
@@ -207,18 +219,11 @@ function resize() {
   const rect = stage.getBoundingClientRect(); if (!rect.width || !rect.height) return;
   renderer.setSize(rect.width, rect.height, false); camera.aspect = rect.width / rect.height; camera.updateProjectionMatrix();
 }
-const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(stage);
-function animate() { requestAnimationFrame(animate); if (autoRotate && !dragging) { if (photoMode && photoFrames.length > 1) showPhotoFrame((photoIndex + 1) % photoFrames.length); else if (!photoMode) azimuth += .0028; } if (bikeGroup && !photoMode && !useImportedModel) { const wheelSpin = autoRotate ? .01 : 0; bikeGroup.traverse((o) => { if ((o.name === 'FrontWheel' || o.name === 'RearWheel') && wheelSpin) o.rotation.z -= wheelSpin; }); } cameraPosition(); if (!photoMode) renderer.render(scene, camera); }
+const resizeObserver = new ResizeObserver(() => { resize(); if (bikeGroup || catalogModels.has(state.bike)) scheduleGeneratedViews(); }); resizeObserver.observe(stage);
+function animate() { requestAnimationFrame(animate); }
 function showToast(message) { const el = $('#toast'); el.textContent = message; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2400); }
 function savedBuilds() { try { return JSON.parse(localStorage.getItem('motoform-builds') || '[]').filter((build) => catalog.motorcycles.some((bike) => bike.id === build.state?.bike)); } catch { return []; } }
 function saveBuilds(builds) { localStorage.setItem('motoform-builds', JSON.stringify(builds)); $('#garage-count').textContent = String(builds.length); }
-function currentPrice() {
-  const bike = catalog.motorcycles.find((record) => record.id === state.bike);
-  if (!bike?.price) return null;
-  const changed = state.paint !== '#c7c9ca' || state.finish !== 'Gloss' || state.wheel !== 'stock' || state.exhaust !== 'stock' || state.accessories;
-  return changed ? null : bike.price;
-}
-function formatPrice(value) { return value == null ? 'Not priced' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
 function installedCount() { return 1 + (state.wheel !== 'stock' ? 1 : 0) + (state.exhaust !== 'stock' ? 1 : 0) + (state.accessories ? 1 : 0) + (state.paint !== '#c7c9ca' ? 1 : 0); }
 function updateUI() {
   const bike = bikes[state.bike], record = catalog.motorcycles.find((item) => item.id === state.bike);
@@ -226,35 +231,102 @@ function updateUI() {
   const expectedOptions = catalog.motorcycles.map((record) => `${record.id}:${record.selectorLabel || `${record.manufacturer} ${record.model}`}`).join('|');
   const currentOptions = [...select.options].map((option) => `${option.value}:${option.textContent}`).join('|');
   if (currentOptions !== expectedOptions) select.replaceChildren(...catalog.motorcycles.map((record) => new Option(record.selectorLabel || `${record.manufacturer} ${record.model}`, record.id)));
-  select.value = state.bike; $('#bike-subtitle').textContent = record?.asset ? `${record.asset.license} · 3D asset` : `${record?.year || ''} · ${record?.variant || ''} · ${record?.source?.name || ''}`;
+  select.value = state.bike; $('#bike-subtitle').textContent = record?.asset ? `${record.asset.license} · model tổng quát` : record?.source ? `${record.year} · ${record.variant} · ${record.source.name}` : 'Catalog · hình minh họa, dữ liệu đang cập nhật';
   $('#viewer-bike-name').textContent = bike.short; $('#stage-model').textContent = bike.name;
   $('.model-tag small').textContent = record?.asset ? `${bike.category} · ${record.asset.version}` : `${bike.category} · ${record?.year || ''}`;
   $('.tag-brand').textContent = bike.mark; $('.tag-brand').style.color = bike.accent;
-  const total = currentPrice(); $('#build-total').textContent = formatPrice(total);
-  $('#build-items').textContent = `${installedCount()} item${installedCount() === 1 ? '' : 's'} installed`;
-  renderBuildSummary(); renderCategoryOptions(); renderProducts();
+  $('#build-items').textContent = state.paint !== '#c7c9ca' ? 'Đã đổi màu xem trước' : 'Chưa chọn phụ tùng';
+  renderBuildSummary(); renderCategoryOptions(); renderProducts(); renderCatalogBikeList(); renderGearIdeas();
   $('#data-eyebrow').textContent = record?.source ? `SOURCE: ${record.source.name.toUpperCase()}` : `SOURCE: ${record?.asset?.creator || '3D MODEL'} · ${record?.asset?.license || ''}`;
-  $('#data-status-title').textContent = record?.asset ? '3D asset · generic fitment' : 'Manufacturer specification';
-  $('#data-status-note').textContent = record?.priceLabel || (record?.asset ? 'No specific bike fitment or market price' : 'Price not listed');
-  $('#data-source-link').href = record?.source?.url || record?.asset?.source || '#';
+  $('#data-status-title').textContent = record?.asset ? 'Ảnh render từ model tổng quát' : record?.source ? 'Thông tin từ nhà sản xuất' : 'Mục catalog · dữ liệu đang cập nhật';
+  $('#data-status-note').textContent = record?.dataStatus || (record?.asset ? 'Không khẳng định phù hợp với xe cụ thể' : record?.source ? 'Thông số do nhà sản xuất công bố' : 'Ảnh minh họa · dữ liệu đang cập nhật');
+  const sourceUrl = record?.source?.url || record?.asset?.source;
+  $('#data-source-link').hidden = !sourceUrl;
+  $('#data-source-link').href = sourceUrl || '#';
   $('#bike-facts').innerHTML = Object.entries(record?.specifications || {}).map(([key, value]) => `<div class="bike-fact"><span>${key.replace(/([A-Z])/g, ' $1').replace(/^./, (letter) => letter.toUpperCase())}</span><strong>${value}</strong></div>`).join('');
-  $('#generated-image-card').hidden = !record?.asset?.sourceImage;
-  if (record?.asset?.sourceImage) { $('#generated-image-card img').src = `./${record.asset.sourceImage}`; $('#generated-image-card a').href = `./${record.asset.sourceImage}`; }
-  $('#options-heading').textContent = record?.asset ? 'No mapped parts' : 'Visual customization';
+  $('#generated-image-card').hidden = true;
+  $('#options-heading').textContent = 'Thông tin xe';
+  const cachedViews = generatedBikeViews.get(state.bike);
+  if (cachedViews?.[activeImageView]) displayBikeView(activeImageView);
   $('#model-source-label').hidden = photoMode;
-  $('#model-source-label').textContent = record?.asset ? `Included ${record.asset.license} mesh · generic bike` : useImportedModel ? 'Imported mesh · 3D parts not mapped' : 'Illustrative geometry · not a Yamaha OEM asset';
+  $('#model-source-label').textContent = record?.asset ? `Ảnh render từ model tổng quát · ${record.asset.license}` : record?.source ? 'Ảnh render minh họa · không phải ảnh OEM' : 'Ảnh minh họa · thông số xe chưa được xác minh';
+  $('#generated-view-label').textContent = record?.asset ? `RENDER TỪ MODEL TỔNG QUÁT · ${record.asset.license}` : record?.source ? 'ẢNH RENDER MINH HỌA · KHÔNG PHẢI ẢNH OEM' : 'ẢNH MINH HỌA · DỮ LIỆU ĐANG CẬP NHẬT';
   $('#undo-button').disabled = history.length === 0;
   $('#redo-button').disabled = future.length === 0;
 }
 function renderBuildSummary() {
   const record = catalog.motorcycles.find((bike) => bike.id === state.bike);
-  const entries = [{ title: bikes[state.bike].name, detail: record?.priceLabel || (record?.asset ? 'Generic 3D asset · no market price' : 'Base bike'), icon: '◈', active: true }];
-  const currentPaint = products.paint.find((p) => p.value === state.paint); if (currentPaint && currentPaint.price) entries.push({ title: currentPaint.name, detail: currentPaint.finish, icon: '◉' });
-  const wheel = products.wheels.find((p) => p.value === state.wheel); if (wheel && wheel.price) entries.push({ title: wheel.name, detail: 'Wheel set', icon: '◎' });
-  const exhaust = products.exhaust.find((p) => p.value === state.exhaust); if (exhaust && exhaust.price) entries.push({ title: exhaust.name, detail: 'Exhaust', icon: '≋' });
-  if (state.accessories) entries.push({ title: 'Frame slider kit', detail: 'Accessories', icon: '⌁' });
+  const entries = [{ title: bikes[state.bike].name, detail: record?.asset ? 'Model tổng quát' : record?.source ? `${record.year} · ${record.category}` : 'Hình minh họa · thông tin đang cập nhật', icon: '◈' }];
+  if (state.paint !== '#c7c9ca') entries.push({ title: 'Màu xem trước', detail: state.finish, icon: '◉' });
   $('#build-summary').innerHTML = entries.map((entry) => `<div class="build-item"><span class="build-item-icon">${entry.icon}</span><span><strong>${entry.title}</strong><small>${entry.detail}</small></span></div>`).join('');
 }
+function renderCatalogBikeList() {
+  $('#catalog-bike-list').innerHTML = catalog.motorcycles.map((record) => `<button class="catalog-bike-option ${record.id === state.bike ? 'selected' : ''}" data-bike-id="${record.id}"><span class="catalog-bike-mark" style="--bike-accent:${record.accent || '#888'}">${record.mark || 'M'}</span><span class="catalog-bike-copy"><strong>${record.displayName || `${record.manufacturer} ${record.model}`}</strong><small>${record.asset ? 'Có model 3D tổng quát' : record.source ? `${record.year} · Có thông số nguồn` : 'Hình và thông số đang cập nhật'}</small></span><span class="catalog-bike-arrow">›</span></button>`).join('');
+  $('#catalog-bike-list').querySelectorAll('[data-bike-id]').forEach((button) => button.addEventListener('click', () => selectBike(button.dataset.bikeId)));
+}
+function renderGearIdeas() {
+  const record = catalog.motorcycles.find((bike) => bike.id === state.bike);
+  const recommendations = record?.recommendations || [];
+  $('#gear-list').innerHTML = recommendations.length ? recommendations.map((group) => `<article class="gear-group"><div class="gear-group-title"><span>${group.name}</span><span>IDEA</span></div><div class="gear-chips">${group.items.map((item) => `<span class="gear-chip">${item}</span>`).join('')}</div><p>${group.why}</p></article>`).join('') : '<div class="gear-group"><strong>Chưa có gợi ý</strong><p>Dữ liệu phụ kiện cho mẫu xe này đang được tổng hợp.</p></div>';
+}
+function selectBike(id) {
+  if (!bikes[id] || state.bike === id) return;
+  useImportedModel = false;
+  if (importedModel) importedModel.visible = false;
+  distance = catalog.motorcycles.find((record) => record.id === id)?.asset ? 4.35 : 7.1;
+  activeImageView = 'front-left';
+  $('#bike-view-image').hidden = true;
+  changeState({ bike: id, paint: '#c7c9ca', finish: 'Gloss', wheel: 'stock', exhaust: 'stock', accessories: false }, false);
+}
+function scheduleGeneratedViews() {
+  clearTimeout(viewGenerationTimer);
+  viewGenerationTimer = setTimeout(generateBikeViews, 140);
+}
+function waitForRenderFrame() { return new Promise((resolve) => requestAnimationFrame(resolve)); }
+async function generateBikeViews() {
+  if (photoMode) return;
+  const id = ++viewGenerationId;
+  const bikeId = state.bike;
+  const record = catalog.motorcycles.find((bike) => bike.id === bikeId);
+  const model = catalogModels.get(bikeId);
+  if (record?.asset && !model) return;
+  const view = generatedBikeViews.get(bikeId);
+  if (!view) $('#load-state').classList.remove('hidden');
+  const previous = { azimuth, polar, distance };
+  const shots = {};
+  const renderDistance = record?.asset ? 4.35 : 7.1;
+  try {
+    for (const [key, angle] of Object.entries(imageViewAngles)) {
+      if (id !== viewGenerationId || bikeId !== state.bike) return;
+      azimuth = angle.azimuth; polar = angle.polar; distance = renderDistance;
+      cameraPosition(); renderer.render(scene, camera);
+      shots[key] = canvas.toDataURL('image/jpeg', .88);
+      await waitForRenderFrame();
+    }
+    if (id !== viewGenerationId || bikeId !== state.bike) return;
+    generatedBikeViews.set(bikeId, shots);
+    displayBikeView(activeImageView);
+  } catch (error) {
+    console.error('Could not generate image views:', error);
+    $('#load-state').innerHTML = '<span>Không thể tạo ảnh góc nhìn trên thiết bị này.</span>';
+  } finally {
+    azimuth = previous.azimuth; polar = previous.polar; distance = previous.distance;
+    cameraPosition(); renderer.render(scene, camera);
+    if (id === viewGenerationId) $('#load-state').classList.add('hidden');
+  }
+}
+function displayBikeView(viewKey) {
+  if (!imageViewAngles[viewKey]) return;
+  activeImageView = viewKey;
+  $('#image-view-caption').textContent = `${imageViewAngles[viewKey].label.toUpperCase()} · ẢNH RENDER`;
+  document.querySelectorAll('[data-view]').forEach((button) => button.classList.toggle('selected', button.dataset.view === viewKey));
+  const views = generatedBikeViews.get(state.bike);
+  if (!views?.[viewKey]) return;
+  $('#bike-view-image').src = views[viewKey];
+  $('#bike-view-image').alt = `${bikes[state.bike].name} — ${imageViewAngles[viewKey].label} image render`;
+  $('#bike-view-image').hidden = false;
+}
+
 function renderCategoryOptions() {
   const target = $('#custom-options');
   if (catalog.motorcycles.find((record) => record.id === state.bike)?.asset) { target.innerHTML = '<div class="option-heading">Parts not mapped</div><div class="option-caption">This model has no verified attachment points or compatible parts in the catalog.</div>'; return; }
@@ -266,11 +338,7 @@ function renderCategoryOptions() {
   } else target.innerHTML = `<div class="option-heading">Unavailable for this model</div><div class="option-caption">No verified component mapping or compatible product record is configured.</div>`;
 }
 function isInstalled(part) { if (part.type === 'paint') return state.paint === part.value; if (part.type === 'wheel') return state.wheel === part.value; if (part.type === 'exhaust') return state.exhaust === part.value; if (part.type === 'accessories') return state.accessories === part.value; return false; }
-function renderProducts() {
-  const list = $('#product-list');
-  const record = catalog.motorcycles.find((bike) => bike.id === state.bike);
-  list.innerHTML = `<div class="empty-state"><span>⌁</span><strong>No sourced aftermarket listings yet</strong><small>${record?.asset ? 'This generic model has no verified manufacturer fitment.' : 'No vendor listings with verified year/variant compatibility and prices are configured.'}</small></div>`;
-}
+function renderProducts() {}
 
 function changeState(changes, notify = true) {
   history.push(JSON.stringify(state)); if (history.length > 40) history.shift(); future = [];
@@ -359,7 +427,7 @@ function loadModelFile(file) {
 function loadCatalogModel(record) {
   if (catalogModelLoading.has(record.id) || catalogModels.has(record.id)) return;
   catalogModelLoading.add(record.id);
-  $('#load-state').innerHTML = '<span class="loader"></span><span>Loading licensed 3D model...</span>';
+  $('#load-state').innerHTML = '<span class="loader"></span><span>Đang tải model ảnh...</span>';
   $('#load-state').classList.remove('hidden');
   gltfLoader.load(`./${record.asset.file}`, (gltf) => {
     const model = gltf.scene;
@@ -372,8 +440,9 @@ function loadCatalogModel(record) {
     catalogModels.set(record.id, model);
     catalogModelLoading.delete(record.id);
     $('#load-state').classList.add('hidden');
-    $('#load-state').innerHTML = '<span class="loader"></span><span>Building your bike...</span>';
+    $('#load-state').innerHTML = '<span class="loader"></span><span>Đang tạo ảnh góc nhìn...</span>';
     updateUI();
+    scheduleGeneratedViews();
   }, undefined, (error) => {
     catalogModelLoading.delete(record.id);
     $('#load-state').classList.add('hidden');
@@ -388,11 +457,11 @@ $('#category-list').addEventListener('click', (event) => {
   document.querySelectorAll('.category').forEach((item) => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-selected', String(active)); });
   renderCategoryOptions(); renderProducts();
 });
-$('#bike-select').addEventListener('change', (event) => { useImportedModel = false; if (importedModel) importedModel.visible = false; distance = catalog.motorcycles.find((record) => record.id === event.target.value)?.asset ? 4.35 : 7.1; changeState({ bike: event.target.value }); });
-$('#change-bike').addEventListener('click', () => { const record = catalog.motorcycles.find((bike) => bike.id === state.bike); window.open(record.source?.url || record.asset?.source, '_blank', 'noopener'); });
-$('#filter-button').addEventListener('click', () => showToast('Open the linked source for full specifications and pricing region'));
-$('#studio-select').addEventListener('click', () => { const bright = scene.background.getHexString() === '1c1d20'; scene.background.set(bright ? '#13171d' : '#1c1d20'); floor.material.color.set(bright ? '#1d2228' : '#222326'); showToast(bright ? 'Night studio environment' : 'Graphite studio environment'); });
-$('#shadow-toggle').addEventListener('click', (event) => { renderer.shadowMap.enabled = !renderer.shadowMap.enabled; event.currentTarget.classList.toggle('selected', !renderer.shadowMap.enabled); showToast(renderer.shadowMap.enabled ? 'Floor shadows on' : 'Floor shadows off'); });
+$('#bike-select').addEventListener('change', (event) => selectBike(event.target.value));
+$('#change-bike').addEventListener('click', () => { const record = catalog.motorcycles.find((bike) => bike.id === state.bike); const source = record.source?.url || record.asset?.source; if (source) window.open(source, '_blank', 'noopener'); else showToast('Nguồn dữ liệu cho mẫu xe này đang được cập nhật'); });
+$('#filter-button').addEventListener('click', () => showToast('Mẫu hiển thị chưa có thông tin fitment phụ tùng đã xác minh'));
+$('#studio-select').addEventListener('click', () => { const bright = scene.background.getHexString() === '1c1d20'; scene.background.set(bright ? '#13171d' : '#1c1d20'); floor.material.color.set(bright ? '#1d2228' : '#222326'); generatedBikeViews.delete(state.bike); scheduleGeneratedViews(); });
+$('#shadow-toggle').addEventListener('click', () => { renderer.shadowMap.enabled = !renderer.shadowMap.enabled; generatedBikeViews.delete(state.bike); scheduleGeneratedViews(); });
 $('#fullscreen-toggle').addEventListener('click', () => { if (!document.fullscreenElement) stage.requestFullscreen?.(); else document.exitFullscreen?.(); });
 $('#rotate-toggle').addEventListener('click', (event) => { autoRotate = !autoRotate; event.currentTarget.classList.toggle('on', autoRotate); });
 $('#photo-mode').addEventListener('click', () => {
@@ -411,44 +480,27 @@ const modelInfoDialog = $('#model-info-dialog');
 $('#photo-model-info').addEventListener('click', () => modelInfoDialog.showModal());
 $('#model-info-close').addEventListener('click', () => modelInfoDialog.close());
 $('#model-info-import').addEventListener('click', () => { modelInfoDialog.close(); $('#model-input').click(); });
-$('#reset-camera').addEventListener('click', () => { azimuth = .55; polar = 1.26; distance = catalog.motorcycles.find((record) => record.id === state.bike)?.asset ? 4.35 : 7.1; autoRotate = false; $('#rotate-toggle').classList.remove('on'); });
+
 $('#undo-button').addEventListener('click', () => { if (!history.length) return; future.push(JSON.stringify(state)); restoreState(history.pop()); });
 $('#redo-button').addEventListener('click', () => { if (!future.length) return; history.push(JSON.stringify(state)); restoreState(future.pop()); });
-$('#zoom-in').addEventListener('click', () => { distance = Math.max(2.4, distance - .45); }); $('#zoom-out').addEventListener('click', () => { distance = Math.min(10, distance + .45); });
-document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => {
-  const views = { front: [Math.PI / 2, 1.18], side: [.55, 1.26], rear: [-Math.PI / 2, 1.18] };
-  azimuth = views[button.dataset.view][0]; polar = views[button.dataset.view][1];
-  document.querySelectorAll('[data-view]').forEach((el) => el.classList.toggle('selected', el === button));
-  const notice = $('#view-notice'); notice.textContent = `${button.dataset.view[0].toUpperCase()}${button.dataset.view.slice(1)} view`; notice.classList.add('show'); setTimeout(() => notice.classList.remove('show'), 900);
-}));
-canvas.addEventListener('pointerdown', (event) => { dragging = true; lastPointer = { x: event.clientX, y: event.clientY }; canvas.setPointerCapture(event.pointerId); });
-canvas.addEventListener('pointermove', (event) => { if (!dragging) return; azimuth += (event.clientX - lastPointer.x) * .008; polar = THREE.MathUtils.clamp(polar + (event.clientY - lastPointer.y) * .006, .5, 2.15); lastPointer = { x: event.clientX, y: event.clientY }; });
-canvas.addEventListener('pointerup', () => { dragging = false; }); canvas.addEventListener('pointercancel', () => { dragging = false; });
-$('#turntable-image').addEventListener('pointerdown', (event) => { photoPointerX = event.clientX; $('#turntable-image').setPointerCapture(event.pointerId); });
-$('#turntable-image').addEventListener('pointermove', (event) => {
-  if (photoPointerX === null || photoFrames.length < 2) return;
-  const delta = event.clientX - photoPointerX; photoPointerX = event.clientX; photoDragRemainder += delta;
-  const frameStep = Math.max(10, $('#viewer-stage').clientWidth / photoFrames.length);
-  if (Math.abs(photoDragRemainder) >= frameStep) { const steps = Math.trunc(photoDragRemainder / frameStep); showPhotoFrame(photoIndex - steps); photoDragRemainder -= steps * frameStep; }
-});
-$('#turntable-image').addEventListener('pointerup', () => { photoPointerX = null; });
-$('#turntable-image').addEventListener('pointercancel', () => { photoPointerX = null; });
-$('#turntable-image').addEventListener('wheel', (event) => { if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) showPhotoFrame(photoIndex + Math.sign(event.deltaX)); }, { passive: true });
-canvas.addEventListener('wheel', (event) => { event.preventDefault(); distance = THREE.MathUtils.clamp(distance + event.deltaY * .004, 2.4, 10); }, { passive: false });
+
+document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => displayBikeView(button.dataset.view)));
+$('#regenerate-views').addEventListener('click', () => { generatedBikeViews.delete(state.bike); $('#load-state').classList.remove('hidden'); scheduleGeneratedViews(); });
+$('#reset-camera').addEventListener('click', () => { activeImageView = 'front-left'; if (generatedBikeViews.has(state.bike)) displayBikeView(activeImageView); else scheduleGeneratedViews(); });
 $('#save-build').addEventListener('click', () => {
   const builds = savedBuilds(), name = `${bikes[state.bike].short} · ${new Date().toLocaleDateString()}`;
-  builds.unshift({ id: crypto.randomUUID?.() || String(Date.now()), name, state: { ...state }, total: currentPrice(), savedAt: new Date().toISOString() });
+  builds.unshift({ id: crypto.randomUUID?.() || String(Date.now()), name, state: { ...state }, savedAt: new Date().toISOString() });
   saveBuilds(builds); showToast('Build saved to My garage');
 });
 const dialog = $('#garage-dialog');
 function renderGarage() {
   const builds = savedBuilds(); $('#garage-count').textContent = String(builds.length);
-  $('#garage-builds').innerHTML = builds.length ? builds.map((build) => `<div class="saved-build"><span class="saved-build-mark">◈</span><span class="saved-build-info"><strong>${build.name}</strong><small>${bikes[build.state.bike]?.name || build.state.bike} · ${formatPrice(build.total)}</small></span><button data-load-build="${build.id}">Load build</button></div>`).join('') : '<div class="garage-empty">Your garage is looking fresh.<br>Save a build from the studio to keep it here.</div>';
+  $('#garage-builds').innerHTML = builds.length ? builds.map((build) => `<div class="saved-build"><span class="saved-build-mark">◈</span><span class="saved-build-info"><strong>${build.name}</strong><small>${bikes[build.state.bike]?.name || build.state.bike}</small></span><button data-load-build="${build.id}">Load build</button></div>`).join('') : '<div class="garage-empty">Your garage is looking fresh.<br>Save a build from the studio to keep it here.</div>';
   $('#garage-builds').querySelectorAll('[data-load-build]').forEach((button) => button.addEventListener('click', () => { const build = builds.find((item) => item.id === button.dataset.loadBuild); if (build) { history.push(JSON.stringify(state)); future = []; restoreState(JSON.stringify(build.state)); dialog.close(); showToast('Build loaded'); } }));
 }
 $('#garage-open').addEventListener('click', () => { renderGarage(); dialog.showModal(); }); $('#garage-close').addEventListener('click', () => dialog.close());
-$('#new-build').addEventListener('click', () => { dialog.close(); changeState({ bike: initialAssetBike?.id || catalog.motorcycles[0].id, paint: '#c7c9ca', finish: 'Gloss', wheel: 'stock', exhaust: 'stock', accessories: false }); showToast('Fresh build started'); });
+$('#new-build').addEventListener('click', () => { dialog.close(); changeState({ bike: catalog.motorcycles[0].id, paint: '#c7c9ca', finish: 'Gloss', wheel: 'stock', exhaust: 'stock', accessories: false }); showToast('Fresh build started'); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && document.activeElement === canvas) document.activeElement.blur(); });
 function showWebGLState() { $('#load-state').innerHTML = '<span style="font-size:23px;color:#ff7755">◇</span><span>3D preview is unavailable in this browser.</span><span style="font-size:9px">Enable WebGL to explore your motorcycle.</span>'; }
-try { resize(); createBike(); renderer.render(scene, camera); if (!catalog.motorcycles.find((record) => record.id === state.bike)?.asset) $('#load-state').classList.add('hidden'); } catch (error) { console.error('Unable to initialize the motorcycle preview:', error); showWebGLState(); }
+try { resize(); createBike(); renderer.render(scene, camera); } catch (error) { console.error('Unable to initialize the motorcycle preview:', error); showWebGLState(); }
 saveBuilds(savedBuilds()); animate();
